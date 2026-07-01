@@ -2,6 +2,9 @@ import { effect } from './effect.js';
 import type { TemplateCtx } from './component.js';
 import { renderIf } from './directives/ifBlock.js';
 import { renderFor } from './directives/forBlock.js';
+import { CASE_DEFAULT, renderCase, type CaseArm } from './directives/caseBlock.js';
+
+export { CASE_DEFAULT };
 
 export type AttrKind =
   | 'static'
@@ -126,6 +129,19 @@ export function __for<T>(
   queueMicrotask(() => {
     if (!anchor.parentNode) return;
     renderFor(anchor.parentNode, anchor, source, keyOf, bodyFactory, ctx);
+  });
+  return anchor;
+}
+
+export function __case(
+  subject: () => unknown,
+  arms: CaseArm[],
+  ctx: TemplateCtx,
+): Node {
+  const anchor = document.createTextNode('');
+  queueMicrotask(() => {
+    if (!anchor.parentNode) return;
+    renderCase(anchor.parentNode, anchor, subject, arms, ctx);
   });
   return anchor;
 }
