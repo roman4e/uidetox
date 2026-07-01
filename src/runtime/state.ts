@@ -38,8 +38,13 @@ export function state<T extends object>(obj: T): T {
     },
     set(target, key, value, receiver) {
       const prev = Reflect.get(target, key, receiver);
+      const prevLength = Array.isArray(target) ? (target as unknown[]).length : -1;
       const ok = Reflect.set(target, key, value, receiver);
-      if (ok && !Object.is(prev, value)) notify(target, key);
+      if (!ok) return ok;
+      if (!Object.is(prev, value)) notify(target, key);
+      if (Array.isArray(target) && (target as unknown[]).length !== prevLength) {
+        notify(target, 'length');
+      }
       return ok;
     },
     deleteProperty(target, key) {

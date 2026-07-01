@@ -1,6 +1,7 @@
 import { effect } from './effect.js';
 import type { TemplateCtx } from './component.js';
 import { renderIf } from './directives/ifBlock.js';
+import { renderFor } from './directives/forBlock.js';
 
 export type AttrKind =
   | 'static'
@@ -111,6 +112,20 @@ export function __if(
   queueMicrotask(() => {
     if (!anchor.parentNode) return;
     renderIf(anchor.parentNode, anchor, cond, whenTrue, whenFalse, ctx);
+  });
+  return anchor;
+}
+
+export function __for<T>(
+  source: () => T[],
+  keyOf: (item: T, index: number) => unknown,
+  bodyFactory: (item: T, index: number, ctx: TemplateCtx) => Node,
+  ctx: TemplateCtx,
+): Node {
+  const anchor = document.createTextNode('');
+  queueMicrotask(() => {
+    if (!anchor.parentNode) return;
+    renderFor(anchor.parentNode, anchor, source, keyOf, bodyFactory, ctx);
   });
   return anchor;
 }

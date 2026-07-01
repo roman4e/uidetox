@@ -1,5 +1,6 @@
 import type { TplElement, TplNode } from './ast.js';
 import { transformIf } from '../directives/ifDirective.js';
+import { transformFor } from '../directives/forDirective.js';
 
 export type DirectiveTransform = (
   node: TplElement,
@@ -9,6 +10,7 @@ export type DirectiveTransform = (
 
 const DIRECTIVES: Record<string, DirectiveTransform> = {
   if: transformIf,
+  for: transformFor,
 };
 
 export function transformDirectives(nodes: TplNode[]): TplNode[] {
