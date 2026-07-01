@@ -1,5 +1,6 @@
 import { effect } from './effect.js';
 import type { TemplateCtx } from './component.js';
+import { renderIf } from './directives/ifBlock.js';
 
 export type AttrKind =
   | 'static'
@@ -98,4 +99,18 @@ export function __el(
   }
   for (const child of children) el.appendChild(child);
   return el;
+}
+
+export function __if(
+  cond: () => unknown,
+  whenTrue: (ctx: TemplateCtx) => Node,
+  whenFalse: ((ctx: TemplateCtx) => Node) | null,
+  ctx: TemplateCtx,
+): Node {
+  const anchor = document.createTextNode('');
+  queueMicrotask(() => {
+    if (!anchor.parentNode) return;
+    renderIf(anchor.parentNode, anchor, cond, whenTrue, whenFalse, ctx);
+  });
+  return anchor;
 }

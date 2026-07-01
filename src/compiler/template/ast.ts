@@ -1,4 +1,10 @@
-export type TplNode = TplElement | TplText | TplInterpolation;
+export type TplNode =
+  | TplElement
+  | TplText
+  | TplInterpolation
+  | TplIf
+  | TplFor
+  | TplCase;
 
 export interface TplElement {
   type: 'element';
@@ -23,4 +29,25 @@ export interface TplText {
 export interface TplInterpolation {
   type: 'interpolation';
   expression: string;
+}
+
+export interface TplIf {
+  type: 'if';
+  condition: string;
+  then: TplNode[];
+  else: TplNode[] | null;
+}
+
+export interface TplFor {
+  type: 'for';
+  each: string;
+  itemVar: string;
+  keyExpr: string | null;
+  body: TplNode[];
+}
+
+export interface TplCase {
+  type: 'case';
+  on: string;
+  arms: Array<{ match: string | null; body: TplNode[] }>;
 }
