@@ -7,7 +7,13 @@ export interface TemplateCtx {
 
 export interface ComponentOptions {
   tag: string;
-  template: (ctx: TemplateCtx) => Node;
+  boot?: (ctx: TemplateCtx) => Node;
+  /**
+   * Back-compat entry points still used by direct-consumer tests.
+   * `template` fires after `setup`; when `boot` is provided it takes
+   * precedence and `setup`/`template` are ignored.
+   */
+  template?: (ctx: TemplateCtx) => Node;
   setup?: (ctx: TemplateCtx) => Record<string, unknown> | void;
   style?: string;
   props?: string[];
@@ -32,8 +38,15 @@ export function defineComponent(options: ComponentOptions): void {
         }
       }
       const ctx: TemplateCtx = { props: this._props, host: this };
-      Object.assign(this._props, options.setup?.(ctx) ?? {});
-      const node = options.template(ctx);
+      let node: Node;
+      if (options.boot) {
+        node = options.boot(ctx);
+      } else if (options.template) {
+        Object.assign(this._props, options.setup?.(ctx) ?? {});
+        node = options.template(ctx);
+      } else {
+        throw new Error('Component must define either boot() or template()');
+      }
       this.appendChild(node);
       if (options.style) {
         const styleEl = document.createElement('style');

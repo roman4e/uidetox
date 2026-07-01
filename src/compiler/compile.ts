@@ -44,24 +44,20 @@ export function compile(source: string): { js: string; tag: string } {
 
   const styleField = style ? `,\n  style: ${JSON.stringify(style.content)}` : '';
 
+  // Script block and template share ONE scope so declarations in the script
+  // are visible to the template's expression closures.
   const js = `${RUNTIME_IMPORTS}
 
-function setup(ctx) {
+function boot(ctx) {
   const { props, host } = ctx;
 ${script?.content ?? ''}
-  return {};
-}
-
-function template(ctx) {
-  const { props, host } = ctx;
   return ${templateBody};
 }
 
 defineComponent({
   tag: ${JSON.stringify(tag)},
   props: ${JSON.stringify(propNames)},
-  setup,
-  template${styleField}
+  boot${styleField}
 });
 `;
 
