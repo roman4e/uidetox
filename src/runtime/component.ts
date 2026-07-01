@@ -1,3 +1,4 @@
+import { setCurrentHost } from './emits.js';
 import { state } from './state.js';
 
 export interface TemplateCtx {
@@ -39,13 +40,18 @@ export function defineComponent(options: ComponentOptions): void {
       }
       const ctx: TemplateCtx = { props: this._props, host: this };
       let node: Node;
-      if (options.boot) {
-        node = options.boot(ctx);
-      } else if (options.template) {
-        Object.assign(this._props, options.setup?.(ctx) ?? {});
-        node = options.template(ctx);
-      } else {
-        throw new Error('Component must define either boot() or template()');
+      setCurrentHost(this);
+      try {
+        if (options.boot) {
+          node = options.boot(ctx);
+        } else if (options.template) {
+          Object.assign(this._props, options.setup?.(ctx) ?? {});
+          node = options.template(ctx);
+        } else {
+          throw new Error('Component must define either boot() or template()');
+        }
+      } finally {
+        setCurrentHost(null);
       }
       this.appendChild(node);
       if (options.style) {
