@@ -12,3 +12,5 @@ export {
   __if,
   __text,
 } from './domHelpers.js';
+export { createToken, registry } from './registry.js';
+export type { RegistryScope, Token } from './registry.js';
