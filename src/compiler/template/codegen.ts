@@ -11,9 +11,12 @@ function q(s: string): string {
 }
 
 function attrsExpr(attrs: TplAttr[]): string {
-  const items = attrs.map(
-    (a) => `[${q(a.name)}, ${q(a.kind)}, ${q(a.value)}]`,
-  );
+  const items = attrs.map((a) => {
+    if (a.kind === 'static') {
+      return `[${q(a.name)}, "static", ${q(a.value)}]`;
+    }
+    return `[${q(a.name)}, ${q(a.kind)}, () => (${a.value})]`;
+  });
   return `[${items.join(', ')}]`;
 }
 
