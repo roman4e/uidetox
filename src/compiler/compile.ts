@@ -6,16 +6,18 @@ import { codegen } from './template/codegen.js';
 const RUNTIME_IMPORTS =
   'import { defineComponent, __el, __text, __bind, __if, __for, __case, __fragment, CASE_DEFAULT } from "uidetox";';
 
-const PROP_LINE = /^\s*(\w+)\s*[?:]/;
+const PROP_TOKEN = /(?:^|[;,\n])\s*(\w+)\s*[?:]/g;
 
 function extractPropNames(propsBlock: string | undefined): string[] {
   if (!propsBlock) return [];
   const inTypeBlock = /Props\s*=\s*\{([\s\S]*?)\}/m.exec(propsBlock);
   if (!inTypeBlock) return [];
   const names: string[] = [];
-  for (const line of inTypeBlock[1].split('\n')) {
-    const m = PROP_LINE.exec(line);
-    if (m) names.push(m[1]);
+  const body = inTypeBlock[1];
+  PROP_TOKEN.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = PROP_TOKEN.exec(body)) !== null) {
+    names.push(m[1]);
   }
   return names;
 }

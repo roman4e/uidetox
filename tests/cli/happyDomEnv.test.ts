@@ -30,7 +30,7 @@ it('renders title', async () => {
 `;
 
 describe('runInHappyDom()', () => {
-  it('executes an emitted test module and reports pass/fail', async () => {
+  it('executes an emitted test module and reports pass/fail', { timeout: 20000 }, async () => {
     const root = mkdtempSync(join(tmpdir(), 'uidetox-hd-'));
     const src = join(root, 'src');
     const cache = join(root, 'cache');

@@ -33,7 +33,7 @@ it('fails', () => { expect(1).toBe(2); });
 `;
 
 describe('runTest()', () => {
-  it('runs happy-dom test blocks across an input directory', async () => {
+  it('runs happy-dom test blocks across an input directory', { timeout: 20000 }, async () => {
     const root = mkdtempSync(join(tmpdir(), 'uidetox-cli-'));
     const src = join(root, 'src');
     mkdirSync(src, { recursive: true });

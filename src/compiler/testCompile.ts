@@ -11,16 +11,18 @@ const TESTING_IMPORTS =
 const HAPPY_DOM_ROLES = new Set(['test', 'test:interaction', 'test:visual', 'test:a11y']);
 const BROWSER_ROLES = new Set(['test:visual:pixel', 'test:a11y:browser']);
 
-const PROP_LINE = /^\s*(\w+)\s*[?:]/;
+const PROP_TOKEN = /(?:^|[;,\n])\s*(\w+)\s*[?:]/g;
 
 function extractPropNames(propsBlock: string | undefined): string[] {
   if (!propsBlock) return [];
   const inTypeBlock = /Props\s*=\s*\{([\s\S]*?)\}/m.exec(propsBlock);
   if (!inTypeBlock) return [];
   const names: string[] = [];
-  for (const line of inTypeBlock[1].split('\n')) {
-    const m = PROP_LINE.exec(line);
-    if (m) names.push(m[1]);
+  const body = inTypeBlock[1];
+  PROP_TOKEN.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = PROP_TOKEN.exec(body)) !== null) {
+    names.push(m[1]);
   }
   return names;
 }
@@ -78,8 +80,14 @@ ${mock?.content ?? '// no mocks'}
 }
 `;
 
+  // Roles where the block body IS the test body (no explicit it() written by author).
+  const AUTO_WRAP_ROLES = new Set(['test:visual', 'test:visual:pixel', 'test:a11y', 'test:a11y:browser']);
+
   function wrap(role: string, body: string): string {
-    return `describe(${JSON.stringify(`${fileLabel}:${role}`)}, () => {\n  beforeEach(__applyMocks);\n${body}\n});\n`;
+    const inner = AUTO_WRAP_ROLES.has(role)
+      ? `  it(${JSON.stringify(role)}, async () => {\n${body}\n  });\n`
+      : body;
+    return `describe(${JSON.stringify(`${fileLabel}:${role}`)}, () => {\n  beforeEach(__applyMocks);\n${inner}\n});\n`;
   }
 
   const happyBlocks = testBlocks.filter((b) => HAPPY_DOM_ROLES.has(b.role));
