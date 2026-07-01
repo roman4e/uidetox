@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { derived } from '../../src/runtime/derived.js';
 import { effect } from '../../src/runtime/effect.js';
+import { flushSync } from '../../src/runtime/scheduler.js';
 import { state } from '../../src/runtime/state.js';
 
 describe('derived()', () => {
@@ -9,6 +10,7 @@ describe('derived()', () => {
     const d = derived(() => s.a * s.b);
     expect(d.value).toBe(6);
     s.a = 4;
+    flushSync();
     expect(d.value).toBe(12);
   });
 
@@ -18,6 +20,7 @@ describe('derived()', () => {
     const seen: number[] = [];
     effect(() => { seen.push(d.value); });
     s.x = 5;
+    flushSync();
     expect(seen).toEqual([11, 15]);
   });
 });
