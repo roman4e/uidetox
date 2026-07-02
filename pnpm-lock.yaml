@@ -14,6 +14,9 @@ importers:
       commander:
         specifier: ^12.0.0
         version: 12.1.0
+      magic-string:
+        specifier: ^0.30.10
+        version: 0.30.21
       parse5:
         specifier: ^7.1.2
         version: 7.3.0
