@@ -18,6 +18,9 @@ function attrOf(node: TplElement, name: string): TplAttr | undefined {
 function resolvePath(raw: string, parent: string): string {
   if (raw.startsWith('...')) {
     const suffix = raw.slice(3);
+    if (parent.endsWith('/') && suffix.startsWith('/')) {
+      return `${parent}${suffix.slice(1)}`;
+    }
     return `${parent}${suffix}`;
   }
   return raw;
