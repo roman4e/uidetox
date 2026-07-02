@@ -32,3 +32,8 @@ export type {
 export { defineRouter } from './router/define.js';
 export type { MatchedRoute, RouterInstance } from './router/define.js';
 export { registerOutlet } from './router/outlet.js';
+
+export { defineTrait, getTrait, clearTraitRegistry } from './traits/define.js';
+export { installTraits, parseUseAttribute, parseParamAttribute } from './traits/install.js';
+export type { UseSpec } from './traits/install.js';
+export type { TraitDescriptor, TraitHandlerSpec } from './traits/types.js';
