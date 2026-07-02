@@ -15,10 +15,12 @@ export interface RouterAst {
 }
 
 function attrVal(node: TplElement, name: string, fallback: string): string {
-  return node.attrs.find((a) => a.name === name)?.value ?? fallback;
+  const lower = name.toLowerCase();
+  return node.attrs.find((a) => a.name.toLowerCase() === lower)?.value ?? fallback;
 }
 function attrHas(node: TplElement, name: string): boolean {
-  return node.attrs.some((a) => a.name === name);
+  const lower = name.toLowerCase();
+  return node.attrs.some((a) => a.name.toLowerCase() === lower);
 }
 function parseGuardExpr(v: string): string[] {
   const trimmed = v.trim();
