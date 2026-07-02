@@ -37,3 +37,5 @@ export { defineTrait, getTrait, clearTraitRegistry } from './traits/define.js';
 export { installTraits, parseUseAttribute, parseParamAttribute } from './traits/install.js';
 export type { UseSpec } from './traits/install.js';
 export type { TraitDescriptor, TraitHandlerSpec } from './traits/types.js';
+export { defineFilter, getFilter } from './filters/define.js';
+export type { FilterDescriptor, FilterTransformer } from './filters/types.js';
