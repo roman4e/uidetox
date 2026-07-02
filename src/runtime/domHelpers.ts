@@ -3,8 +3,15 @@ import type { TemplateCtx } from './component.js';
 import { renderIf } from './directives/ifBlock.js';
 import { renderFor } from './directives/forBlock.js';
 import { CASE_DEFAULT, renderCase, type CaseArm } from './directives/caseBlock.js';
+import { installTraits, type UseSpec } from './traits/install.js';
 
 export { CASE_DEFAULT };
+
+export function __use(el: Element, specs: UseSpec[]): void {
+  const map = new Map<Element, UseSpec[]>();
+  map.set(el, specs);
+  installTraits(el, map);
+}
 
 export type AttrKind =
   | 'static'

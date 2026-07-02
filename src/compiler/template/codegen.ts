@@ -40,9 +40,48 @@ function interpolationExpr(node: TplInterpolation): string {
   return `__bind(__text(""), "text-content", "", () => (${node.expression}), ctx)`;
 }
 
+const PARAM_ATTR_RE = /^:([a-z][a-z0-9-]*)(?::([a-z][a-z0-9-]*))?$/;
+
+function kebabCamel(s: string): string {
+  return s.replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase());
+}
+
+function useSpecExpr(useValue: string, paramAttrs: TplAttr[]): string {
+  const traitNames = useValue.split(',').map((s) => s.trim()).filter(Boolean);
+  const shared: TplAttr[] = [];
+  const perTrait = new Map<string, TplAttr[]>();
+  for (const a of paramAttrs) {
+    const m = PARAM_ATTR_RE.exec(a.name);
+    if (!m) continue;
+    if (m[2] === undefined) shared.push(a);
+    else {
+      if (!perTrait.has(m[1])) perTrait.set(m[1], []);
+      perTrait.get(m[1])!.push(a);
+    }
+  }
+  const specs = traitNames.map((traitName) => {
+    const attrs = [...shared, ...(perTrait.get(traitName) ?? [])];
+    const entries = attrs.map((a) => {
+      const m = PARAM_ATTR_RE.exec(a.name)!;
+      const key = kebabCamel(m[2] ?? m[1]);
+      const valueExpr = a.kind === 'static' ? q(a.value) : `(${a.value})`;
+      return `${key}: ${valueExpr}`;
+    });
+    return `{ traitName: ${q(traitName)}, params: { ${entries.join(', ')} } }`;
+  });
+  return `[${specs.join(', ')}]`;
+}
+
 function elementExpr(node: TplElement): string {
+  const useAttr = node.attrs.find((a) => a.name === 'use' && a.kind === 'static');
+  const paramAttrs = node.attrs.filter((a) => PARAM_ATTR_RE.test(a.name));
+  const restAttrs = node.attrs.filter((a) => a !== useAttr && !paramAttrs.includes(a));
   const children = node.children.map(nodeExpr).join(', ');
-  return `__el(${q(node.tag)}, ${attrsExpr(node.attrs)}, [${children}], ctx)`;
+  const elCall = `__el(${q(node.tag)}, ${attrsExpr(restAttrs)}, [${children}], ctx)`;
+  if (!useAttr && paramAttrs.length === 0) return elCall;
+  if (!useAttr) return elCall;
+  const specs = useSpecExpr(useAttr.value, paramAttrs);
+  return `(() => { const __el0 = ${elCall}; __use(__el0, ${specs}); return __el0; })()`;
 }
 
 function childrenBlock(children: TplNode[]): string {
