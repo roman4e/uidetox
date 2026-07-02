@@ -21,10 +21,11 @@ export function emitParamSchema(attrs: Array<[string, string]>): ParamEmit {
       else if (key === 'optional') optional = true;
       continue;
     }
+    const cleanName = key.startsWith(':') ? key.slice(1) : key;
     if (name !== undefined) {
-      throw new Error(`<param> may declare only one :name binding; got ${name} and ${key}`);
+      throw new Error(`<param> may declare only one :name binding; got ${name} and ${cleanName}`);
     }
-    name = key;
+    name = cleanName;
     type = value;
   }
   if (name === undefined) {
