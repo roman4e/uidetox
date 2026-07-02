@@ -15,3 +15,20 @@ export {
 export { createToken, registry } from './registry.js';
 export type { RegistryScope, Token } from './registry.js';
 export { defineEmits } from './emits.js';
+
+export {
+  Redirect,
+  lazy,
+} from './router/types.js';
+export type {
+  Guard,
+  Handler,
+  Location as RouterLocation,
+  ParamSchema,
+  ParamType,
+  ParamValue,
+  RouteEntry,
+} from './router/types.js';
+export { defineRouter } from './router/define.js';
+export type { MatchedRoute, RouterInstance } from './router/define.js';
+export { registerOutlet } from './router/outlet.js';
