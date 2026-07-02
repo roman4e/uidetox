@@ -88,9 +88,22 @@ function convert(node: P5Element, casedByOffset: Map<number, string>): TplNode[]
   return kids;
 }
 
+const VOID_ELEMENTS = new Set([
+  'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
+  'link', 'meta', 'param', 'source', 'track', 'wbr',
+]);
+
+function expandSelfClosing(source: string): string {
+  return source.replace(/<([A-Za-z][\w-]*)\b([^>]*?)\/>/g, (match, tag: string, attrs: string) => {
+    if (VOID_ELEMENTS.has(tag.toLowerCase())) return match;
+    return `<${tag}${attrs}></${tag}>`;
+  });
+}
+
 export function parseTemplate(source: string): TplNode[] {
-  const casedByOffset = collectAuthorCasing(source);
-  const fragment = parseFragment(source, { sourceCodeLocationInfo: true });
+  const normalized = expandSelfClosing(source);
+  const casedByOffset = collectAuthorCasing(normalized);
+  const fragment = parseFragment(normalized, { sourceCodeLocationInfo: true });
   const out: TplNode[] = [];
   for (const child of (fragment as unknown as { childNodes: P5Element[] }).childNodes) {
     out.push(...convert(child, casedByOffset));
