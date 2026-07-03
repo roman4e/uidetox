@@ -110,6 +110,11 @@ class Parser {
       if (this.isMemberStart()) break;
       this.i++;
       const key = t.value;
+      // Known always-flag keys
+      if (key === 'export' || key === 'disabled') {
+        clauses.push({ key, kind: 'flag' });
+        continue;
+      }
       const nextTok = this.peek();
       if (!nextTok) { clauses.push({ key, kind: 'flag' }); continue; }
       if (nextTok.kind === 'symbol' && nextTok.value === '[') {
