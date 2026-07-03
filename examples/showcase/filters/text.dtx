@@ -1,0 +1,5 @@
+filter lowercase export input string output string
+transform lc() { return v.toLowerCase(); }
+
+filter title-case export input string output string extends [lowercase]
+transform tc() { return v.charAt(0).toUpperCase() + v.slice(1); }

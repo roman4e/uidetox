@@ -1,0 +1,5 @@
+trait trim export appliesto [input, textarea]
+on blur trim_handler() { this.el.value = this.el.value.trim(); }
+
+trait uppercase export appliesto [input] extends [trim]
+on blur upper_handler() { this.el.value = this.el.value.toUpperCase(); }
