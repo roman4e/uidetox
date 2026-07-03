@@ -40,3 +40,8 @@ export type { UseSpec } from './traits/install.js';
 export type { TraitDescriptor, TraitHandlerSpec } from './traits/types.js';
 export { defineFilter, getFilter } from './filters/define.js';
 export type { FilterDescriptor, FilterTransformer } from './filters/types.js';
+
+export { registerLazyLoad } from './lazyLoad/element.js';
+export { createLoaderCache } from './lazyLoad/loader.js';
+export { attachTrigger, schedulePrefetch } from './lazyLoad/triggers.js';
+export type { TriggerName, TriggerHandle } from './lazyLoad/triggers.js';
