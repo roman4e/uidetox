@@ -95,7 +95,10 @@ class Parser {
     const t = this.peek();
     if (!t) return false;
     if (t.kind === 'symbol' && t.value === '.') return true;
-    if (t.kind === 'word' && (t.value === 'on' || t.value === 'off' || t.value === 'transform' || t.value === 'default')) return true;
+    if (t.kind === 'word' && (
+      t.value === 'on' || t.value === 'off' || t.value === 'transform' || t.value === 'default' ||
+      t.value === 'template' || t.value === 'style' || t.value === 'actions' || t.value === 'effects'
+    )) return true;
     return false;
   }
 
@@ -124,6 +127,11 @@ class Parser {
       }
       if (nextTok.kind === 'symbol' && nextTok.value === '(') {
         clauses.push({ key, kind: 'params', params: this.parseParamSpecs() });
+        continue;
+      }
+      if (nextTok.kind === 'string') {
+        this.i++;
+        clauses.push({ key, kind: 'value', value: nextTok.value });
         continue;
       }
       if (nextTok.kind === 'word' && !VERBS.has(nextTok.value as Verb) &&
@@ -185,6 +193,16 @@ class Parser {
       const bodyTok = this.next();
       if (bodyTok.kind !== 'body') throw new Error('{ body } expected');
       return { kind: 'on', event, name, body: bodyTok.value };
+    }
+    if (t.kind === 'word' && (t.value === 'template' || t.value === 'style' || t.value === 'actions' || t.value === 'effects')) {
+      const kind = t.value as 'template' | 'style' | 'actions' | 'effects';
+      this.i++;
+      let scoped = false;
+      const nextTok = this.peek();
+      if (nextTok && nextTok.kind === 'word' && nextTok.value === 'scoped') { scoped = true; this.i++; }
+      const bodyTok = this.next();
+      if (bodyTok.kind !== 'body') throw new Error(`{ body } expected after ${kind}`);
+      return { kind, name: null, body: bodyTok.value, scoped };
     }
     if (t.kind === 'word' && (t.value === 'transform' || t.value === 'default')) {
       const kind = t.value as 'transform' | 'default';

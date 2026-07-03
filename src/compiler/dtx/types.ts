@@ -16,11 +16,12 @@ export interface Clause {
 }
 
 export interface Member {
-  kind: 'on' | 'transform' | 'default' | 'prop' | 'off';
+  kind: 'on' | 'transform' | 'default' | 'prop' | 'off' | 'template' | 'style' | 'actions' | 'effects';
   event?: string;
   name: string | null;
   body?: string;
   propValue?: string;
+  scoped?: boolean;
 }
 
 export interface Declaration {
