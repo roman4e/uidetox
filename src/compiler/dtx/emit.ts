@@ -178,6 +178,7 @@ function collectImports(ast: DtxAst): Set<string> {
       needed.add('__if');
       needed.add('__for');
       needed.add('__case');
+      needed.add('__ref');
       needed.add('__fragment');
       needed.add('CASE_DEFAULT');
     }

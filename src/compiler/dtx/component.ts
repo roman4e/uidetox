@@ -25,11 +25,13 @@ export function emitComponent(decl: Declaration): string {
   const templateBody = codegen(ast);
 
   const bootLines: string[] = [
-    '  const { props, host } = ctx;',
+    '  const { props, host, refs, ref, find, findAll } = ctx;',
   ];
   if (actions?.body) bootLines.push(`  ${actions.body.trim()}`);
+  // Build the template first so refs are populated before effects run.
+  bootLines.push(`  const __tpl = ${templateBody};`);
   if (effects?.body) bootLines.push(`  ${effects.body.trim()}`);
-  bootLines.push(`  return ${templateBody};`);
+  bootLines.push('  return __tpl;');
 
   const styleField = style ? `,\n  style: ${sq(style.body ?? '')}` : '';
   return `${isExport ? 'export ' : ''}const ${decl.name} = defineComponent({
