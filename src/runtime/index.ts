@@ -48,6 +48,7 @@ export { inspectComponentTree } from './devtools/inspector.js';
 export type { ComponentNode } from './devtools/inspector.js';
 export { mutate, mutateStructural, readStaged, commitStage, measure, measureOffscreen, commitSync } from './dom/index.js';
 export type { PropKind, StructuralOp } from './dom/index.js';
+export { readFrame, scheduleRead } from './scheduler.js';
 export { prefersReducedMotion, computeFlipDelta, flip, animate, viewTransition } from './anim/index.js';
 export type { Rect, FlipDelta, FlipOptions, AnimateOptions } from './anim/index.js';
 export { createLoaderCache } from './lazyLoad/loader.js';

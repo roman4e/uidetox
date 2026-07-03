@@ -1,10 +1,11 @@
 type Job = () => void;
 
-type PhaseName = 'derivations' | 'effects' | 'renders';
+type PhaseName = 'derivations' | 'effects' | 'reads' | 'renders';
 
 const queues: Record<PhaseName, Set<Job>> = {
   derivations: new Set<Job>(),
   effects: new Set<Job>(),
+  reads: new Set<Job>(),
   renders: new Set<Job>(),
 };
 
@@ -32,6 +33,17 @@ export function scheduleDerivation(job: Job): void {
 export function scheduleEffect(job: Job): void {
   queues.effects.add(job);
   armFlush();
+}
+
+export function scheduleRead(job: Job): void {
+  queues.reads.add(job);
+  armFlush();
+}
+
+export function readFrame<T>(fn: () => T): Promise<T> {
+  return new Promise<T>((resolve) => {
+    scheduleRead(() => resolve(fn()));
+  });
 }
 
 export function scheduleRender(job: Job): void {
@@ -68,8 +80,9 @@ export function flushSync(): void {
   while (turns < MAX_TURNS) {
     const dder = drainQueue('derivations');
     const deff = drainQueue('effects');
+    const drd = drainQueue('reads');
     const dren = drainQueue('renders');
-    if (!dder && !deff && !dren) break;
+    if (!dder && !deff && !drd && !dren) break;
     turns++;
   }
   if (turns >= MAX_TURNS) {
