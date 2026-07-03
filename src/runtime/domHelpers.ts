@@ -43,6 +43,8 @@ export function __fragment(nodes: Node[]): DocumentFragment {
   return frag;
 }
 
+import { scheduleRender } from './scheduler.js';
+
 export function __bind(
   node: Node,
   kind: AttrKind,
@@ -51,8 +53,15 @@ export function __bind(
   _ctx: TemplateCtx,
 ): Node {
   if (kind === 'text-content') {
+    let isFirst = true;
     effect(() => {
-      (node as Text).data = String(exprFn() ?? '');
+      const next = String(exprFn() ?? '');
+      if (isFirst) {
+        isFirst = false;
+        (node as Text).data = next;
+      } else {
+        scheduleRender(() => { (node as Text).data = next; });
+      }
     });
     return node;
   }
@@ -69,26 +78,38 @@ export function __bind(
     return el;
   }
   if (kind === 'property') {
+    let firstProp = true;
     effect(() => {
-      (el as unknown as Record<string, unknown>)[attrName] = exprFn();
+      const next = exprFn();
+      const apply = () => { (el as unknown as Record<string, unknown>)[attrName] = next; };
+      if (firstProp) { firstProp = false; apply(); } else scheduleRender(apply);
     });
     return el;
   }
   if (kind === 'boolean') {
+    let firstBool = true;
     effect(() => {
-      if (exprFn()) el.setAttribute(attrName, '');
-      else el.removeAttribute(attrName);
+      const next = !!exprFn();
+      const apply = () => {
+        if (next) el.setAttribute(attrName, '');
+        else el.removeAttribute(attrName);
+      };
+      if (firstBool) { firstBool = false; apply(); } else scheduleRender(apply);
     });
     return el;
   }
   // 'expression'
+  let firstExpr = true;
   effect(() => {
     const value = exprFn();
-    if (value === false || value === null || value === undefined) {
-      el.removeAttribute(attrName);
-    } else {
-      el.setAttribute(attrName, String(value));
-    }
+    const apply = () => {
+      if (value === false || value === null || value === undefined) {
+        el.removeAttribute(attrName);
+      } else {
+        el.setAttribute(attrName, String(value));
+      }
+    };
+    if (firstExpr) { firstExpr = false; apply(); } else scheduleRender(apply);
   });
   return el;
 }

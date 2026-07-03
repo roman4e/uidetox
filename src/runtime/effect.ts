@@ -1,7 +1,12 @@
 import { runWithObserver } from './observer.js';
-import { scheduleFlush } from './scheduler.js';
+import { scheduleEffect } from './scheduler.js';
 
-export function effect(fn: () => void | (() => void)): () => void {
+export interface EffectOptions {
+  scheduler?: (job: () => void) => void;
+}
+
+export function effect(fn: () => void | (() => void), opts: EffectOptions = {}): () => void {
+  const schedule = opts.scheduler ?? scheduleEffect;
   let cleanup: void | (() => void);
   let disposed = false;
   let firstRun = true;
@@ -15,7 +20,7 @@ export function effect(fn: () => void | (() => void)): () => void {
       firstRun = false;
       run();
     } else {
-      scheduleFlush(run);
+      schedule(run);
     }
   };
   scheduled();
