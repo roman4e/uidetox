@@ -15,6 +15,34 @@ function sq(v: unknown): string {
   return `'${v.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
 }
 
+function extendsRef(decl: Declaration): string {
+  const clause = decl.clauses.find((c) => c.key === 'extends');
+  if (!clause?.items || clause.items.length === 0) return '';
+  const refs = clause.items.map((n) => kebabToCamel(n)).join(', ');
+  return `extends: [${refs}]`;
+}
+
+function offMap(members: Member[], event = 'event'): string {
+  const offs = members.filter((m) => m.kind === 'off' && (event === 'transform' ? m.event === 'transform' : m.event !== 'transform'));
+  if (offs.length === 0) return '';
+  if (event === 'transform') {
+    const names = offs.map((m) => m.name);
+    if (names.includes(null)) return `offTransform: 'all'`;
+    return `offTransform: [${names.map((n) => sq(n as string)).join(', ')}]`;
+  }
+  const byEvent = new Map<string, Array<string | null>>();
+  for (const m of offs) {
+    if (!byEvent.has(m.event!)) byEvent.set(m.event!, []);
+    byEvent.get(m.event!)!.push(m.name);
+  }
+  const entries: string[] = [];
+  for (const [ev, names] of byEvent) {
+    if (names.includes(null)) entries.push(`${sq(ev)}: 'all'`);
+    else entries.push(`${sq(ev)}: [${names.map((n) => sq(n as string)).join(', ')}]`);
+  }
+  return `off: { ${entries.join(', ')} }`;
+}
+
 function emitParamsSchema(params: ParamSpec[]): string {
   if (params.length === 0) return '{}';
   const entries = params.map((p) => {
@@ -62,11 +90,15 @@ function emitTraitDecl(decl: Declaration): string {
   const paramsObj = params?.params ? emitParamsSchema(params.params) : '{}';
   const handlers = emitTraitHandlers(decl.members);
   const props = emitTraitProps(decl.members);
+  const extra: string[] = [];
+  const ext = extendsRef(decl); if (ext) extra.push(ext);
+  const off = offMap(decl.members, 'event'); if (off) extra.push(off);
+  const extraStr = extra.length ? `,\n  ${extra.join(',\n  ')}` : '';
   return `${isExport ? 'export ' : ''}const ${camel} = defineTrait(${sq(decl.name)}, {
   appliesTo: ${appliesArr},
   paramsSchema: ${paramsObj},
   props: ${props},
-  handlers: ${handlers},
+  handlers: ${handlers}${extraStr},
 });
 `;
 }
@@ -88,11 +120,15 @@ function emitFilterDecl(decl: Declaration): string {
   const params = decl.clauses.find((c) => c.key === 'params');
   const paramsObj = params?.params ? emitParamsSchema(params.params) : '{}';
   const transformers = emitFilterTransformers(decl.members, input);
+  const extra: string[] = [];
+  const ext = extendsRef(decl); if (ext) extra.push(ext);
+  const off = offMap(decl.members, 'transform'); if (off) extra.push(off);
+  const extraStr = extra.length ? `,\n  ${extra.join(',\n  ')}` : '';
   return `${isExport ? 'export ' : ''}const ${camel} = defineFilter(${sq(decl.name)}, {
   input: ${sq(input)},
   output: ${sq(output)},
   paramsSchema: ${paramsObj},
-  transformers: ${transformers},
+  transformers: ${transformers}${extraStr},
 });
 `;
 }
@@ -100,8 +136,13 @@ function emitFilterDecl(decl: Declaration): string {
 function emitTokenDecl(decl: Declaration): string {
   const camel = kebabToCamel(decl.name);
   const isExport = decl.clauses.some((c) => c.key === 'export');
-  const typeName = decl.clauses.find((c) => c.key !== 'export')?.value ?? 'unknown';
-  return `${isExport ? 'export ' : ''}const ${camel} = createToken<${typeName}>(${sq(decl.name)});\n`;
+  const typeClause = decl.clauses.find((c) => c.key !== 'export' && c.key !== 'extends');
+  const typeName = typeClause?.value ?? typeClause?.key ?? 'unknown';
+  const clause = decl.clauses.find((c) => c.key === 'extends');
+  const opts = clause?.items && clause.items.length
+    ? `, { extends: [${clause.items.map((n) => kebabToCamel(n)).join(', ')}] }`
+    : '';
+  return `${isExport ? 'export ' : ''}const ${camel} = createToken<${typeName}>(${sq(decl.name)}${opts});\n`;
 }
 
 function emitProvideDecl(decl: Declaration): string {
@@ -152,6 +193,6 @@ export function emitDtx(ast: DtxAst): { code: string } {
 export function compileDtxSource(source: string): { code: string; map: string } {
   const ast = parseDtx(source);
   const { code } = emitDtx(ast);
-  const map = sq({ version: 3, sources: ['<dtx>'], names: [], mappings: '' });
+  const map = JSON.stringify({ version: 3, sources: ['<dtx>'], names: [], mappings: '' });
   return { code, map };
 }
