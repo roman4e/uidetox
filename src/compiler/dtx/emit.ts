@@ -1,5 +1,6 @@
 import { kebabToCamel } from './namespace.js';
 import { parseDtx } from './parse.js';
+import { emitComponent } from './component.js';
 import type {
   Declaration,
   DtxAst,
@@ -169,6 +170,17 @@ function collectImports(ast: DtxAst): Set<string> {
     if (decl.verb === 'filter') needed.add('defineFilter');
     if (decl.verb === 'token') needed.add('createToken');
     if (decl.verb === 'provide') needed.add('registry');
+    if (decl.verb === 'component') {
+      needed.add('defineComponent');
+      needed.add('__el');
+      needed.add('__text');
+      needed.add('__bind');
+      needed.add('__if');
+      needed.add('__for');
+      needed.add('__case');
+      needed.add('__fragment');
+      needed.add('CASE_DEFAULT');
+    }
   }
   return needed;
 }
@@ -186,6 +198,7 @@ export function emitDtx(ast: DtxAst): { code: string } {
     else if (decl.verb === 'filter') lines.push(emitFilterDecl(decl));
     else if (decl.verb === 'token') lines.push(emitTokenDecl(decl));
     else if (decl.verb === 'provide') lines.push(emitProvideDecl(decl));
+    else if (decl.verb === 'component') lines.push(emitComponent(decl));
   }
   return { code: lines.join('\n') };
 }
