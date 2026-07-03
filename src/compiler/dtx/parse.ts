@@ -9,7 +9,7 @@ import type {
   Verb,
 } from './types.js';
 
-const VERBS = new Set<Verb>(['trait', 'filter', 'token', 'provide']);
+const VERBS = new Set<Verb>(['trait', 'filter', 'token', 'provide', 'component']);
 
 class Parser {
   public i = 0;

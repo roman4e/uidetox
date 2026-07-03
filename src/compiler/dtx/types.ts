@@ -1,4 +1,4 @@
-export type Verb = 'trait' | 'filter' | 'token' | 'provide';
+export type Verb = 'trait' | 'filter' | 'token' | 'provide' | 'component';
 
 export interface ParamSpec {
   type: string;
