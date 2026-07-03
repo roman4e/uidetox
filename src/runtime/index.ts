@@ -42,6 +42,8 @@ export { defineFilter, getFilter } from './filters/define.js';
 export type { FilterDescriptor, FilterTransformer } from './filters/types.js';
 
 export { registerLazyLoad } from './lazyLoad/element.js';
+export { renderToString } from './ssr/render.js';
+export { hydrate } from './ssr/hydrate.js';
 export { createLoaderCache } from './lazyLoad/loader.js';
 export { attachTrigger, schedulePrefetch } from './lazyLoad/triggers.js';
 export type { TriggerName, TriggerHandle } from './lazyLoad/triggers.js';
