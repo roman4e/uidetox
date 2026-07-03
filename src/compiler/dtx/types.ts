@@ -9,14 +9,14 @@ export interface ParamSpec {
 
 export interface Clause {
   key: string;
-  kind: 'flag' | 'value' | 'list' | 'params';
+  kind: 'flag' | 'value' | 'list' | 'list-of-refs' | 'params';
   value?: string;
   items?: string[];
   params?: ParamSpec[];
 }
 
 export interface Member {
-  kind: 'on' | 'transform' | 'default' | 'prop';
+  kind: 'on' | 'transform' | 'default' | 'prop' | 'off';
   event?: string;
   name: string | null;
   body?: string;

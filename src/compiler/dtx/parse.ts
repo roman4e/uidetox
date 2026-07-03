@@ -95,7 +95,7 @@ class Parser {
     const t = this.peek();
     if (!t) return false;
     if (t.kind === 'symbol' && t.value === '.') return true;
-    if (t.kind === 'word' && (t.value === 'on' || t.value === 'transform' || t.value === 'default')) return true;
+    if (t.kind === 'word' && (t.value === 'on' || t.value === 'off' || t.value === 'transform' || t.value === 'default')) return true;
     return false;
   }
 
@@ -113,7 +113,8 @@ class Parser {
       const nextTok = this.peek();
       if (!nextTok) { clauses.push({ key, kind: 'flag' }); continue; }
       if (nextTok.kind === 'symbol' && nextTok.value === '[') {
-        clauses.push({ key, kind: 'list', items: this.parseClauseList() });
+        const items = this.parseClauseList();
+        clauses.push({ key, kind: key === 'extends' ? 'list-of-refs' : 'list', items });
         continue;
       }
       if (nextTok.kind === 'symbol' && nextTok.value === '(') {
@@ -144,6 +145,24 @@ class Parser {
       const valueTok = this.next();
       const propValue = valueTok.kind === 'string' ? JSON.stringify(valueTok.value) : valueTok.value;
       return { kind: 'prop', name: nameTok.value, propValue };
+    }
+    if (t.kind === 'word' && t.value === 'off') {
+      this.i++;
+      const eventTok = this.next();
+      if (eventTok.kind !== 'word') throw new Error('off <event> expected');
+      const event = eventTok.value;
+      let name: string | null = null;
+      const nextTok = this.peek();
+      if (nextTok && nextTok.kind === 'symbol' && nextTok.value === '*') {
+        this.i++;
+        name = null;
+      } else if (nextTok && nextTok.kind === 'word') {
+        this.i++;
+        name = nextTok.value;
+      }
+      if (!this.eatSymbol('(')) throw new Error('( expected');
+      if (!this.eatSymbol(')')) throw new Error(') expected');
+      return { kind: 'off', event, name };
     }
     if (t.kind === 'word' && t.value === 'on') {
       this.i++;

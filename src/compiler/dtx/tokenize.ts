@@ -5,7 +5,7 @@ export type Token =
   | { kind: 'body'; value: string; offset: number };
 
 const WORD_RE = /[A-Za-z_$][A-Za-z0-9_$-]*|[0-9]+/y;
-const SYMBOLS = new Set(['(', ')', '[', ']', ',', '?', '.', '=', ':']);
+const SYMBOLS = new Set(['(', ')', '[', ']', ',', '?', '.', '=', ':', '*']);
 
 export function tokenize(source: string): Token[] {
   const out: Token[] = [];
