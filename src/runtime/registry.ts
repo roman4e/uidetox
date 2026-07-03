@@ -1,23 +1,23 @@
 import { derived, type Derived } from './derived.js';
 import { state } from './state.js';
+import { resolveLinearization } from './mro/linearize.js';
 
 export interface Token<T> {
   readonly id: symbol;
   readonly name: string;
+  readonly extends?: Token<T>[];
   readonly __t?: T;
 }
 
-export function createToken<T>(name: string): Token<T> {
-  return { id: Symbol(name), name };
+export function createToken<T>(name: string, opts: { extends?: Token<T>[] } = {}): Token<T> {
+  const token: Token<T> = { id: Symbol(name), name, extends: opts.extends };
+  return token;
 }
 
 type Provider<T> = T | (() => T);
-interface Slot {
-  provider: Provider<unknown>;
-}
+interface Slot { provider: Provider<unknown>; }
 
 const globalProviders = state<Record<string, Slot>>({});
-
 let activeScope: InternalScope | null = null;
 
 export interface RegistryScope {
@@ -30,9 +30,7 @@ interface InternalScope extends RegistryScope {
   readonly slots: Record<string, Slot>;
 }
 
-function keyOf(sym: symbol): string {
-  return sym.toString();
-}
+function keyOf(sym: symbol): string { return sym.toString(); }
 
 function readSlot(id: symbol): Slot | undefined {
   const k = keyOf(id);
@@ -49,6 +47,15 @@ function resolveValue<T>(slot: Slot | undefined): T | undefined {
   return typeof p === 'function' ? (p as () => T)() : p;
 }
 
+function walkMro<T>(token: Token<T>): T | undefined {
+  const mro = resolveLinearization(token as unknown as { name: string; extends?: Array<Token<T>> });
+  for (const t of mro) {
+    const slot = readSlot((t as Token<T>).id);
+    if (slot) return resolveValue<T>(slot);
+  }
+  return undefined;
+}
+
 function createScope(): RegistryScope {
   const slots = state<Record<string, Slot>>({});
   const scope: InternalScope = {
@@ -62,11 +69,7 @@ function createScope(): RegistryScope {
     enter<R>(fn: () => R): R {
       const prev = activeScope;
       activeScope = scope;
-      try {
-        return fn();
-      } finally {
-        activeScope = prev;
-      }
+      try { return fn(); } finally { activeScope = prev; }
     },
   };
   return scope;
@@ -85,10 +88,7 @@ export const registry = {
     activeScope.override(token, value);
   },
   get<T>(token: Token<T>): Derived<T> {
-    return derived<T>(() => {
-      const slot = readSlot(token.id);
-      return resolveValue<T>(slot) as T;
-    });
+    return derived<T>(() => walkMro<T>(token) as T);
   },
   createScope,
 };
