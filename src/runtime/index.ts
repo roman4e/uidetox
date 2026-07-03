@@ -48,6 +48,8 @@ export { inspectComponentTree } from './devtools/inspector.js';
 export type { ComponentNode } from './devtools/inspector.js';
 export { mutate, mutateStructural, readStaged, commitStage, measure, measureOffscreen, commitSync } from './dom/index.js';
 export type { PropKind, StructuralOp } from './dom/index.js';
+export { prefersReducedMotion, computeFlipDelta, flip, animate, viewTransition } from './anim/index.js';
+export type { Rect, FlipDelta, FlipOptions, AnimateOptions } from './anim/index.js';
 export { createLoaderCache } from './lazyLoad/loader.js';
 export { attachTrigger, schedulePrefetch } from './lazyLoad/triggers.js';
 export type { TriggerName, TriggerHandle } from './lazyLoad/triggers.js';
