@@ -11,6 +11,10 @@ export interface TplElement {
   tag: string;
   attrs: TplAttr[];
   children: TplNode[];
+  /** Static ref key (from #name, else static name/id), camel-cased. */
+  refKey?: string;
+  /** Computed ref key expression (from #${expr}). */
+  refExpr?: string;
 }
 
 export type TplAttrKind = 'static' | 'expression' | 'event' | 'property' | 'boolean';

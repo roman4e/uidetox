@@ -57,11 +57,42 @@ interface P5Element {
   tagName?: string;
   attrs?: Array<{ name: string; value: string }>;
   childNodes?: P5Element[];
-  sourceCodeLocation?: { startTag?: { startOffset: number }; startOffset?: number };
+  sourceCodeLocation?: {
+    startTag?: { startOffset: number; endOffset: number };
+    startOffset?: number;
+  };
   value?: string;
 }
 
-function convert(node: P5Element, casedByOffset: Map<number, string>): TplNode[] {
+function camelize(name: string): string {
+  return name.replace(/-([a-z0-9])/gi, (_, c: string) => c.toUpperCase());
+}
+
+const REF_MARKER = /(?:^|\s)#(?:\$\{([^}]+)\}|([A-Za-z0-9_-]+))/;
+
+function extractRef(
+  node: P5Element,
+  source: string,
+): { refKey?: string; refExpr?: string } {
+  // Explicit #marker — scan the raw start-tag source (parse5 lowercases attr names).
+  const st = node.sourceCodeLocation?.startTag;
+  if (st) {
+    const raw = source.slice(st.startOffset, st.endOffset);
+    const m = REF_MARKER.exec(raw);
+    if (m) {
+      if (m[1] !== undefined) return { refExpr: m[1].trim() };
+      if (m[2] !== undefined) return { refKey: camelize(m[2]) };
+    }
+  }
+  // Auto-bind static name, else static id.
+  const nameAttr = (node.attrs ?? []).find((a) => a.name === 'name');
+  if (nameAttr && !/^\$\{/.test(nameAttr.value)) return { refKey: camelize(nameAttr.value) };
+  const idAttr = (node.attrs ?? []).find((a) => a.name === 'id');
+  if (idAttr && !/^\$\{/.test(idAttr.value)) return { refKey: camelize(idAttr.value) };
+  return {};
+}
+
+function convert(node: P5Element, casedByOffset: Map<number, string>, source: string): TplNode[] {
   if (node.nodeName === '#text') {
     return splitTextWithInterpolations(node.value ?? '');
   }
@@ -77,13 +108,17 @@ function convert(node: P5Element, casedByOffset: Map<number, string>): TplNode[]
     );
     const children: TplNode[] = [];
     for (const child of node.childNodes ?? []) {
-      children.push(...convert(child, casedByOffset));
+      children.push(...convert(child, casedByOffset, source));
     }
-    return [{ type: 'element', tag: authorTag, attrs, children }];
+    const el: TplNode = { type: 'element', tag: authorTag, attrs, children };
+    const { refKey, refExpr } = extractRef(node, source);
+    if (refKey) el.refKey = refKey;
+    if (refExpr) el.refExpr = refExpr;
+    return [el];
   }
   const kids: TplNode[] = [];
   for (const child of node.childNodes ?? []) {
-    kids.push(...convert(child, casedByOffset));
+    kids.push(...convert(child, casedByOffset, source));
   }
   return kids;
 }
@@ -106,7 +141,7 @@ export function parseTemplate(source: string): TplNode[] {
   const fragment = parseFragment(normalized, { sourceCodeLocationInfo: true });
   const out: TplNode[] = [];
   for (const child of (fragment as unknown as { childNodes: P5Element[] }).childNodes) {
-    out.push(...convert(child, casedByOffset));
+    out.push(...convert(child, casedByOffset, normalized));
   }
   return out;
 }
