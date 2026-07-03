@@ -1,0 +1,8 @@
+{
+  "manifest_version": 3,
+  "name": "UIDetox DevTools",
+  "version": "0.0.1",
+  "description": "Inspect UIDetox components in Chrome DevTools",
+  "devtools_page": "devtools.html",
+  "permissions": ["storage"]
+}
