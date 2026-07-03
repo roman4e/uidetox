@@ -9,4 +9,6 @@ export interface TraitDescriptor {
   paramsSchema: Record<string, unknown>;
   props: () => Record<string, unknown>;
   handlers: Record<string, TraitHandlerSpec[]>;
+  extends?: TraitDescriptor[];
+  off?: Record<string, string[] | 'all'>;
 }
