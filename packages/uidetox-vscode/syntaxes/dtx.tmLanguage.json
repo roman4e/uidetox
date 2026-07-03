@@ -1,0 +1,39 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "UIDetox DTX",
+  "scopeName": "source.dtx",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#verbs" },
+    { "include": "#clauses" },
+    { "include": "#members" },
+    { "include": "#strings" },
+    { "include": "#numbers" }
+  ],
+  "repository": {
+    "comments": {
+      "match": "#.*$",
+      "name": "comment.line.number-sign.dtx"
+    },
+    "verbs": {
+      "match": "\\b(trait|filter|token|provide|component)\\b",
+      "name": "keyword.control.verb.dtx"
+    },
+    "clauses": {
+      "match": "\\b(export|appliesto|params|input|output|from|extends|tag|props|state|title|emits|import|as)\\b",
+      "name": "storage.modifier.clause.dtx"
+    },
+    "members": {
+      "match": "\\b(on|off|transform|default|template|style|actions|effects|scoped)\\b",
+      "name": "entity.name.function.member.dtx"
+    },
+    "strings": {
+      "match": "\"[^\"]*\"",
+      "name": "string.quoted.double.dtx"
+    },
+    "numbers": {
+      "match": "\\b[0-9]+\\b",
+      "name": "constant.numeric.dtx"
+    }
+  }
+}

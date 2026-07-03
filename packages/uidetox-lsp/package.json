@@ -1,0 +1,13 @@
+{
+  "name": "uidetox-lsp",
+  "version": "0.0.1",
+  "description": "Language Server for UIDetox .dtx files",
+  "main": "dist/server.js",
+  "bin": {
+    "uidetox-lsp": "./dist/server.js"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsc"
+  }
+}

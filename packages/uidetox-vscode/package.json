@@ -1,0 +1,21 @@
+{
+  "name": "uidetox-vscode",
+  "displayName": "UIDetox",
+  "description": "UIDetox .dtx language support",
+  "version": "0.0.1",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [{
+      "id": "uidetox-dtx",
+      "aliases": ["UIDetox DTX", "dtx"],
+      "extensions": [".dtx"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "uidetox-dtx",
+      "scopeName": "source.dtx",
+      "path": "./syntaxes/dtx.tmLanguage.json"
+    }]
+  }
+}
