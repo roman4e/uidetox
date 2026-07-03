@@ -9,4 +9,6 @@ export interface FilterDescriptor {
   output: string;
   paramsSchema: Record<string, unknown>;
   transformers: FilterTransformer[];
+  extends?: FilterDescriptor[];
+  offTransform?: string[] | 'all';
 }
