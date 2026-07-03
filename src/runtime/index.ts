@@ -10,6 +10,7 @@ export {
   __for,
   __fragment,
   __if,
+  __ref,
   __text,
   __use,
 } from './domHelpers.js';

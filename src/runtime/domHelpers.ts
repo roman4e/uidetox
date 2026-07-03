@@ -13,6 +13,11 @@ export function __use(el: Element, specs: UseSpec[]): void {
   installTraits(el, map);
 }
 
+export function __ref(ctx: TemplateCtx, key: string, el: Element): Element {
+  if (key) ctx.refs[key] = el;
+  return el;
+}
+
 export type AttrKind =
   | 'static'
   | 'expression'

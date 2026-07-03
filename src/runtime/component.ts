@@ -4,6 +4,10 @@ import { state } from './state.js';
 export interface TemplateCtx {
   props: Record<string, unknown>;
   host: HTMLElement;
+  refs: Record<string, Element>;
+  ref: (name: string) => Element | undefined;
+  find: (selector: string) => Element | null;
+  findAll: (selector: string) => Element[];
 }
 
 export interface ComponentOptions {
@@ -38,7 +42,15 @@ export function defineComponent(options: ComponentOptions): void {
           this._props[name] = this.getAttribute(name);
         }
       }
-      const ctx: TemplateCtx = { props: this._props, host: this };
+      const refs: Record<string, Element> = {};
+      const ctx: TemplateCtx = {
+        props: this._props,
+        host: this,
+        refs,
+        ref: (name) => refs[name],
+        find: (selector) => this.querySelector(selector),
+        findAll: (selector) => Array.from(this.querySelectorAll(selector)),
+      };
       let node: Node;
       setCurrentHost(this);
       try {
