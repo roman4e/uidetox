@@ -46,6 +46,8 @@ export { renderToString } from './ssr/render.js';
 export { hydrate } from './ssr/hydrate.js';
 export { inspectComponentTree } from './devtools/inspector.js';
 export type { ComponentNode } from './devtools/inspector.js';
+export { mutate, mutateStructural, readStaged, commitStage, measure, measureOffscreen, commitSync } from './dom/index.js';
+export type { PropKind, StructuralOp } from './dom/index.js';
 export { createLoaderCache } from './lazyLoad/loader.js';
 export { attachTrigger, schedulePrefetch } from './lazyLoad/triggers.js';
 export type { TriggerName, TriggerHandle } from './lazyLoad/triggers.js';

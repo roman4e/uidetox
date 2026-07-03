@@ -43,7 +43,7 @@ export function __fragment(nodes: Node[]): DocumentFragment {
   return frag;
 }
 
-import { scheduleRender } from './scheduler.js';
+import { mutate } from './dom/stage.js';
 
 export function __bind(
   node: Node,
@@ -60,7 +60,7 @@ export function __bind(
         isFirst = false;
         (node as Text).data = next;
       } else {
-        scheduleRender(() => { (node as Text).data = next; });
+        mutate(node, 'text', '', next);
       }
     });
     return node;
@@ -81,8 +81,12 @@ export function __bind(
     let firstProp = true;
     effect(() => {
       const next = exprFn();
-      const apply = () => { (el as unknown as Record<string, unknown>)[attrName] = next; };
-      if (firstProp) { firstProp = false; apply(); } else scheduleRender(apply);
+      if (firstProp) {
+        firstProp = false;
+        (el as unknown as Record<string, unknown>)[attrName] = next;
+      } else {
+        mutate(el, 'prop', attrName, next);
+      }
     });
     return el;
   }
@@ -90,11 +94,13 @@ export function __bind(
     let firstBool = true;
     effect(() => {
       const next = !!exprFn();
-      const apply = () => {
+      if (firstBool) {
+        firstBool = false;
         if (next) el.setAttribute(attrName, '');
         else el.removeAttribute(attrName);
-      };
-      if (firstBool) { firstBool = false; apply(); } else scheduleRender(apply);
+      } else {
+        mutate(el, 'boolean', attrName, next);
+      }
     });
     return el;
   }
@@ -102,14 +108,16 @@ export function __bind(
   let firstExpr = true;
   effect(() => {
     const value = exprFn();
-    const apply = () => {
+    if (firstExpr) {
+      firstExpr = false;
       if (value === false || value === null || value === undefined) {
         el.removeAttribute(attrName);
       } else {
         el.setAttribute(attrName, String(value));
       }
-    };
-    if (firstExpr) { firstExpr = false; apply(); } else scheduleRender(apply);
+    } else {
+      mutate(el, 'attr', attrName, value);
+    }
   });
   return el;
 }
