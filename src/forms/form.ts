@@ -40,6 +40,8 @@ export interface FormInstance<T> {
   field(path: string): FieldHandle;
   rule(pred: (values: T) => boolean, msg: string, paths: string[]): void;
   watch(path: string, cb: (value: unknown) => void): () => void;
+  /** Merges server-side field errors (e.g. from an ApiError) into the error map. */
+  applyServerErrors(err: { fieldErrors?: Record<string, string[]> } | null | undefined): void;
   submit(ev?: Event): Promise<void>;
   reset(newInitial?: T): void;
 }
@@ -69,9 +71,10 @@ export function form<T extends object>(config: FormConfig<T>): FormInstance<T> {
   let initial = clone(config.initial);
   const rules: CrossRule[] = [];
 
-  // Sync errors are the source of truth; async errors merge on top per-path.
+  // Sync errors are the source of truth; async + server errors merge on top per-path.
   let syncErrors: ErrorMap = {};
   const asyncErrors: ErrorMap = {};
+  const serverErrors: ErrorMap = {};
   const asyncTokens: Record<string, number> = {};
   const asyncTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 
@@ -83,6 +86,9 @@ export function form<T extends object>(config: FormConfig<T>): FormInstance<T> {
     const next: ErrorMap = {};
     for (const [p, msgs] of Object.entries(syncErrors)) next[p] = [...msgs];
     for (const [p, msgs] of Object.entries(asyncErrors)) {
+      (next[p] ??= []).push(...msgs);
+    }
+    for (const [p, msgs] of Object.entries(serverErrors)) {
       (next[p] ??= []).push(...msgs);
     }
     for (const k of Object.keys(errors)) if (!(k in next)) delete errors[k];
@@ -140,6 +146,8 @@ export function form<T extends object>(config: FormConfig<T>): FormInstance<T> {
   }
 
   function afterChange(path: string): void {
+    // Editing a field dismisses any stale server error on it.
+    if (serverErrors[path]) delete serverErrors[path];
     recomputeDirty();
     revalidate();
     runAsync(path);
@@ -198,6 +206,15 @@ export function form<T extends object>(config: FormConfig<T>): FormInstance<T> {
     watch(path, cb) {
       return effect(() => { cb(getPath(values, path)); });
     },
+    applyServerErrors(err) {
+      for (const k of Object.keys(serverErrors)) delete serverErrors[k];
+      if (err?.fieldErrors) {
+        for (const [p, msgs] of Object.entries(err.fieldErrors)) {
+          serverErrors[p] = [...msgs];
+        }
+      }
+      mergeErrors();
+    },
     async submit(ev?: Event) {
       ev?.preventDefault?.();
       meta.submitting = true;
@@ -219,6 +236,7 @@ export function form<T extends object>(config: FormConfig<T>): FormInstance<T> {
       for (const k of Object.keys(touched)) delete touched[k];
       for (const k of Object.keys(pending)) delete pending[k];
       for (const k of Object.keys(asyncErrors)) delete asyncErrors[k];
+      for (const k of Object.keys(serverErrors)) delete serverErrors[k];
       recomputeDirty();
       revalidate();
     },
