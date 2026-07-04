@@ -15,3 +15,14 @@ export function runWithObserver<T>(observer: Observer, fn: () => T): T {
     current = prev;
   }
 }
+
+/** Runs fn without subscribing any reactive reads to the current observer. */
+export function untrack<T>(fn: () => T): T {
+  const prev = current;
+  current = null;
+  try {
+    return fn();
+  } finally {
+    current = prev;
+  }
+}

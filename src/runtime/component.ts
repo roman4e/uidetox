@@ -1,4 +1,5 @@
 import { setCurrentHost } from './emits.js';
+import { setCleanupSink } from './lifecycle.js';
 import { effect } from './effect.js';
 import { registry } from './registry.js';
 import { state } from './state.js';
@@ -92,6 +93,7 @@ export function defineComponent(options: ComponentOptions): void {
       };
       let node: Node;
       setCurrentHost(this);
+      setCleanupSink(this._disposers);
       try {
         if (options.boot) {
           node = options.boot(ctx);
@@ -103,6 +105,7 @@ export function defineComponent(options: ComponentOptions): void {
         }
       } finally {
         setCurrentHost(null);
+        setCleanupSink(null);
       }
       this.appendChild(node);
       if (options.style) {
