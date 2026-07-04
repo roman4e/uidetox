@@ -37,7 +37,7 @@ export function renderVirtualFor<T>(
   const overscan = opts.overscan ?? 4;
   const selfScroll = !opts.scrollParent || opts.scrollParent === 'self';
 
-  const container = document.createElement('div') as VirtualForElement;
+  const container = document.createElement('div') as unknown as VirtualForElement;
   container.setAttribute('part', 'virtual-for');
   if (selfScroll) {
     container.style.overflow = 'auto';
@@ -113,7 +113,7 @@ export function renderVirtualFor<T>(
         slot = { node: bodyFactory(item, i, ctx), key };
         slots.set(key, slot);
       }
-      const expectedNext = cursor ? cursor.nextSibling : layer.firstChild;
+      const expectedNext: Node | null = cursor ? cursor.nextSibling : layer.firstChild;
       if (slot.node !== expectedNext) {
         layer.insertBefore(slot.node, expectedNext);
       }

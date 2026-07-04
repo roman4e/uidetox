@@ -21,6 +21,14 @@ export {
 export { createToken, registry } from './registry.js';
 export type { RegistryScope, Token } from './registry.js';
 export { defineEmits } from './emits.js';
+export {
+  registerDnd,
+  attachDraggable,
+  attachDroppable,
+  attachSortable,
+  attachSortableItem,
+} from './dnd/index.js';
+export type { DraggableParams, DroppableParams, DragDetail } from './dnd/index.js';
 
 export {
   Redirect,

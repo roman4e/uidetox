@@ -1,0 +1,41 @@
+component IngredientPalette export tag ingredient-palette
+
+props
+array ingredients
+end props
+
+script
+function onDrop(detail) {
+  // detail = { payload, clientX, clientY, offsetX, offsetY }
+  host.dispatchEvent(new CustomEvent('place-node', { detail, bubbles: true }));
+}
+end script
+
+actions
+function handleDrop(e) { onDrop(e.detail); }
+end actions
+
+template
+<div class="palette">
+  <ul class="sources">
+    <for each=${props.ingredients} item="ing" key="ing.id">
+      <li use="draggable" data-payload=${JSON.stringify({ kind: 'ingredient', id: ing.id })}>
+        ${ing.name}
+      </li>
+    </for>
+  </ul>
+
+  <div class="canvas" use="droppable" :accept=${'ingredient'} @drop-payload=${handleDrop}>
+    drop here
+  </div>
+</div>
+end template
+
+style scoped
+.palette { display: flex; gap: 1rem; }
+li[use] { cursor: grab; }
+.canvas[data-drop-active] { outline: 2px dashed royalblue; }
+body[data-dragging] { cursor: grabbing; }
+end style
+
+end component
