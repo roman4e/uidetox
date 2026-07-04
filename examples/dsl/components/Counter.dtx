@@ -1,0 +1,28 @@
+component Counter export tag app-counter
+
+props
+number start
+end props
+
+script
+const s = state({ count: props.start ?? 0 });
+end script
+
+actions
+function inc() { s.count++; }
+function dec() { s.count--; }
+end actions
+
+template
+<div class="counter">
+  <button #dec @click=${dec}>-</button>
+  <span class="value">${s.count}</span>
+  <button #inc @click=${inc}>+</button>
+</div>
+end template
+
+style scoped
+.counter { display: flex; gap: 1rem; }
+end style
+
+end component
