@@ -37,4 +37,24 @@ describe('<virtual-for> codegen', () => {
     const code = gen('<virtual-for each=${xs} row-height="10" debug><span/></virtual-for>');
     expect(code).toContain('debug: true');
   });
+
+  it('supports the unified <for viewport="virtual"> form', () => {
+    const code = gen(
+      '<for each=${rows} item="r" key="r.id" viewport="virtual" row-height="48" overscan="6"><div>${r.label}</div></for>',
+    );
+    expect(code).toContain('__virtualFor(() => (rows)');
+    expect(code).toContain('(r, index) => (r.id)');
+    expect(code).toContain('rowHeight: (48)');
+    expect(code).toContain('overscan: (6)');
+  });
+
+  it('keeps a plain <for> non-windowed', () => {
+    const code = gen('<for each=${rows} item="r"><div>${r}</div></for>');
+    expect(code).toContain('__for(() => (rows)');
+    expect(code).not.toContain('__virtualFor');
+  });
+
+  it('throws if <for viewport="virtual"> lacks row-height', () => {
+    expect(() => gen('<for each=${rows} viewport="virtual"><div/></for>')).toThrow(/row-height/);
+  });
 });

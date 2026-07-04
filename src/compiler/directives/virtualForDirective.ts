@@ -12,13 +12,17 @@ function codeValue(a: TplAttr | undefined, quoteStatic: boolean): string | null 
   return a.value;
 }
 
-export const transformVirtualFor: DirectiveTransform = (node) => {
+/**
+ * Builds a windowed-list node from a `<virtual-for>` element or a
+ * `<for viewport="virtual">` element. `label` names the source for errors.
+ */
+export function buildVirtualForNode(node: TplElement, label: string): TplVirtualFor {
   const each = attr(node, 'each');
-  if (!each) throw new Error('<virtual-for> requires an "each" attribute');
+  if (!each) throw new Error(`${label} requires an "each" attribute`);
   const rowHeight = codeValue(attr(node, 'row-height'), false);
-  if (rowHeight === null) throw new Error('<virtual-for> requires a "row-height" attribute');
+  if (rowHeight === null) throw new Error(`${label} requires a "row-height" attribute`);
 
-  const result: TplVirtualFor = {
+  return {
     type: 'virtual-for',
     each: each.value,
     itemVar: codeValue(attr(node, 'item'), false) ?? 'item',
@@ -29,5 +33,8 @@ export const transformVirtualFor: DirectiveTransform = (node) => {
     debug: !!attr(node, 'debug'),
     body: node.children,
   };
-  return { node: result, consumeNext: 0 };
+}
+
+export const transformVirtualFor: DirectiveTransform = (node) => {
+  return { node: buildVirtualForNode(node, '<virtual-for>'), consumeNext: 0 };
 };

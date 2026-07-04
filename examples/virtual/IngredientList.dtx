@@ -5,12 +5,12 @@ array items
 end props
 
 template
-<virtual-for each=${props.items} item="ing" key="ing.id" row-height="48" overscan="6">
+<for each=${props.items} item="ing" key="ing.id" viewport="virtual" row-height="48" overscan="6">
   <div class="ingredient-row">
     <span class="name">${ing.name}</span>
     <span class="cat">${ing.category}</span>
   </div>
-</virtual-for>
+</for>
 end template
 
 style scoped

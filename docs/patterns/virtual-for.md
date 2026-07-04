@@ -1,24 +1,30 @@
-# Pattern: `<virtual-for>` (windowed list rendering)
+# Pattern: virtualized `<for>` (windowed list rendering)
 
-Renders only the visible slice of a long list plus a small overscan, mounting
-and unmounting rows as the user scrolls. DOM node count stays bounded no matter
-how long the list is.
+Windowing is a **mode of `<for>`**, opted into with `viewport="virtual"`. It
+renders only the visible slice of a long list plus a small overscan, mounting
+and unmounting rows as the user scrolls, so the DOM node count stays bounded no
+matter how long the list is.
 
 ```html
-<virtual-for
+<for
   each=${ingredients}
   item="ing"
   key="ing.id"
+  viewport="virtual"
   row-height="48"
   overscan="6">
   <ingredient-row data=${ing}/>
-</virtual-for>
+</for>
 ```
+
+A plain `<for>` (no `viewport`) renders every row, as before — same `each` /
+`item` / `key`. `<virtual-for>` remains as an alias for the windowed form.
 
 ## Attributes
 
 | Attribute | Meaning |
 |---|---|
+| `viewport` | `"virtual"` (or `"windowed"`) turns on windowing; omit for a plain list |
 | `each` | reactive array (required) |
 | `item` | row scope variable (default `item`) |
 | `key` | expression yielding a stable id per row |
