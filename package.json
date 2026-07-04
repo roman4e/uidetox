@@ -17,6 +17,7 @@
     ".": "./dist/runtime/index.js",
     "./forms": "./dist/forms/index.js",
     "./http": "./dist/http/index.js",
+    "./i18n": "./dist/i18n/index.js",
     "./compiler": "./dist/compiler/index.js"
   },
   "dependencies": {
