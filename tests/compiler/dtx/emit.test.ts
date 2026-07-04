@@ -29,7 +29,7 @@ transform lc() { return v.toLowerCase(); }
   });
 
   it('emits imports with rename', () => {
-    const src = `from "./x.dtx" import trim, numeric-only as num
+    const src = `import trim, numeric-only as num from "./x.dtx"
 `;
     const { code } = compileDtx(src);
     expect(code).toContain("import { trim, numericOnly as num } from './x.dtx';");

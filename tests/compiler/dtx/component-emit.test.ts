@@ -3,9 +3,17 @@ import { compileDtx } from '../../../src/compiler/dtx/index.js';
 
 describe('component emit', () => {
   it('emits defineComponent call with template + style', () => {
-    const src = `component AppCard export tag "app-card"
-template { <div class="card"><h2>hi</h2></div> }
-style scoped { .card { padding: 1rem; } }
+    const src = `component AppCard export tag app-card
+
+template
+<div class="card"><h2>hi</h2></div>
+end template
+
+style scoped
+.card { padding: 1rem; }
+end style
+
+end component
 `;
     const { code } = compileDtx(src);
     expect(code).toContain('import { defineComponent');
@@ -15,13 +23,22 @@ style scoped { .card { padding: 1rem; } }
     expect(code).toContain('.card { padding: 1rem; }');
   });
 
-  it('splices actions body into boot before template', () => {
-    const src = `component X tag "x-x"
-actions { const greeting = 'hi'; }
-template { <div>hello</div> }
+  it('wires actions as host methods', () => {
+    const src = `component X tag x-x
+
+actions
+function inc() { count++; }
+end actions
+
+template
+<div>hello</div>
+end template
+
+end component
 `;
     const { code } = compileDtx(src);
-    expect(code).toContain("const greeting = 'hi';");
+    expect(code).toContain('function inc()');
+    expect(code).toContain('host.inc = inc;');
     expect(code).toContain('__el("div"');
   });
 });

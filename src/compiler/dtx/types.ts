@@ -16,7 +16,18 @@ export interface Clause {
 }
 
 export interface Member {
-  kind: 'on' | 'transform' | 'default' | 'prop' | 'off' | 'template' | 'style' | 'actions' | 'effects';
+  kind:
+    | 'on'
+    | 'transform'
+    | 'default'
+    | 'prop'
+    | 'off'
+    | 'template'
+    | 'style'
+    | 'actions'
+    | 'effects'
+    | 'script'
+    | 'props';
   event?: string;
   name: string | null;
   body?: string;
@@ -29,12 +40,15 @@ export interface Declaration {
   name: string;
   clauses: Clause[];
   members: Member[];
+  isDeclare?: boolean;
+  declareKind?: string;
   sourceOffset: number;
   sourceEndOffset: number;
 }
 
 export interface ImportStatement {
-  path: string;
+  /** Explicit module path, or null for auto-resolve by name. */
+  from: string | null;
   items: Array<{ source: string; alias?: string }>;
   sourceOffset: number;
   sourceEndOffset: number;

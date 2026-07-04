@@ -1,3 +1,11 @@
-component AppCard export tag "app-card"
-template { <div class="card"><slot/></div> }
-style scoped { .card { padding: 1rem; } }
+component AppCard export tag app-card
+
+template
+<div class="card"><slot/></div>
+end template
+
+style scoped
+.card { padding: 1rem; }
+end style
+
+end component

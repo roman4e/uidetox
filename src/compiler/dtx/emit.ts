@@ -154,13 +154,18 @@ function emitProvideDecl(decl: Declaration): string {
 }
 
 function emitImport(imp: ImportStatement): string {
-  if (imp.items.length === 0) return `import ${sq(imp.path)};\n`;
+  // Bare `import name` (no from) → side-effect import that registers the tag.
+  if (imp.from === null) {
+    const first = imp.items[0]?.source ?? '';
+    return `import ${sq('./' + first)};\n`;
+  }
+  if (imp.items.length === 0) return `import ${sq(imp.from)};\n`;
   const names = imp.items.map((it) => {
     const src = kebabToCamel(it.source);
     const alias = it.alias ? kebabToCamel(it.alias) : undefined;
     return alias ? `${src} as ${alias}` : src;
   }).join(', ');
-  return `import { ${names} } from ${sq(imp.path)};\n`;
+  return `import { ${names} } from ${sq(imp.from)};\n`;
 }
 
 function collectImports(ast: DtxAst): Set<string> {

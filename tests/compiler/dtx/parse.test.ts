@@ -2,14 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { parseDtx } from '../../../src/compiler/dtx/parse.js';
 
 describe('parseDtx()', () => {
-  it('parses imports', () => {
-    const ast = parseDtx('from "./x.dtx" import trim, numeric-only as num\n');
+  it('parses imports (JS style)', () => {
+    const ast = parseDtx('import trim, numeric-only as num from "./x.dtx"\n');
     expect(ast.imports).toHaveLength(1);
-    expect(ast.imports[0].path).toBe('./x.dtx');
+    expect(ast.imports[0].from).toBe('./x.dtx');
     expect(ast.imports[0].items).toEqual([
       { source: 'trim' },
       { source: 'numeric-only', alias: 'num' },
     ]);
+  });
+
+  it('parses a bare import (auto-resolve)', () => {
+    const ast = parseDtx('import big-number\n');
+    expect(ast.imports[0].from).toBeNull();
+    expect(ast.imports[0].items).toEqual([{ source: 'big-number' }]);
   });
 
   it('parses trait with clauses and members', () => {

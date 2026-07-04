@@ -1,4 +1,5 @@
 import { tokenize, type Token } from './tokenize.js';
+import { scanSource, type RawBlock, type RawMember } from './lines.js';
 import type {
   Clause,
   Declaration,
@@ -11,50 +12,16 @@ import type {
 
 const VERBS = new Set<Verb>(['trait', 'filter', 'token', 'provide', 'component']);
 
-class Parser {
+/** Token-based parser for a declaration header (name + clauses). */
+class HeaderParser {
   public i = 0;
   constructor(private tokens: Token[]) {}
-
-  peek(offset = 0): Token | undefined {
-    return this.tokens[this.i + offset];
-  }
-  next(): Token {
-    return this.tokens[this.i++];
-  }
-  eatSymbol(sym: string): boolean {
+  peek(o = 0): Token | undefined { return this.tokens[this.i + o]; }
+  next(): Token { return this.tokens[this.i++]; }
+  eatSymbol(s: string): boolean {
     const t = this.peek();
-    if (t && t.kind === 'symbol' && t.value === sym) { this.i++; return true; }
+    if (t && t.kind === 'symbol' && t.value === s) { this.i++; return true; }
     return false;
-  }
-  eatWord(word: string): boolean {
-    const t = this.peek();
-    if (t && t.kind === 'word' && t.value === word) { this.i++; return true; }
-    return false;
-  }
-
-  parseImport(): ImportStatement | null {
-    const first = this.peek();
-    if (!first || first.kind !== 'word' || first.value !== 'from') return null;
-    const start = first.offset;
-    this.i++;
-    const pathTok = this.next();
-    if (pathTok.kind !== 'string') throw new Error('from expects a string path');
-    const items: ImportStatement['items'] = [];
-    if (this.eatWord('import')) {
-      while (true) {
-        const nameTok = this.next();
-        if (nameTok.kind !== 'word') throw new Error('import expects a name');
-        const item: { source: string; alias?: string } = { source: nameTok.value };
-        if (this.eatWord('as')) {
-          const aliasTok = this.next();
-          if (aliasTok.kind !== 'word') throw new Error('as expects a name');
-          item.alias = aliasTok.value;
-        }
-        items.push(item);
-        if (!this.eatSymbol(',')) break;
-      }
-    }
-    return { path: pathTok.value, items, sourceOffset: start, sourceEndOffset: this.tokens[this.i - 1].offset };
   }
 
   parseClauseList(): string[] {
@@ -80,10 +47,10 @@ class Parser {
       const nameTok = this.next();
       if (nameTok.kind !== 'word') throw new Error('param name expected');
       let defaultValue: string | undefined;
-      const next = this.peek();
-      if (next && (next.kind === 'string' || (next.kind === 'word' && /^[0-9]/.test(next.value)) || (next.kind === 'word' && (next.value === 'true' || next.value === 'false')))) {
+      const nx = this.peek();
+      if (nx && (nx.kind === 'string' || (nx.kind === 'word' && /^[0-9]/.test(nx.value)) || (nx.kind === 'word' && (nx.value === 'true' || nx.value === 'false')))) {
         this.i++;
-        defaultValue = next.kind === 'string' ? JSON.stringify(next.value) : next.value;
+        defaultValue = nx.kind === 'string' ? JSON.stringify(nx.value) : nx.value;
       }
       params.push({ type: typeTok.value, optional, name: nameTok.value, defaultValue });
       if (this.eatSymbol(')')) return params;
@@ -91,177 +58,143 @@ class Parser {
     }
   }
 
-  isMemberStart(): boolean {
-    const t = this.peek();
-    if (!t) return false;
-    if (t.kind === 'symbol' && t.value === '.') return true;
-    if (t.kind === 'word' && (
-      t.value === 'on' || t.value === 'off' || t.value === 'transform' || t.value === 'default' ||
-      t.value === 'template' || t.value === 'style' || t.value === 'actions' || t.value === 'effects'
-    )) return true;
-    return false;
-  }
-
   parseClauses(): Clause[] {
     const clauses: Clause[] = [];
     while (true) {
       const t = this.peek();
       if (!t) break;
-      if (t.kind === 'symbol') break;
-      if (t.kind !== 'word') break;
-      if (VERBS.has(t.value as Verb)) break;
-      if (this.isMemberStart()) break;
+      if (t.kind === 'symbol') { this.i++; continue; }
+      if (t.kind !== 'word') { this.i++; continue; }
       this.i++;
       const key = t.value;
-      // Known always-flag keys
-      if (key === 'export' || key === 'disabled') {
-        clauses.push({ key, kind: 'flag' });
-        continue;
-      }
-      const nextTok = this.peek();
-      if (!nextTok) { clauses.push({ key, kind: 'flag' }); continue; }
-      if (nextTok.kind === 'symbol' && nextTok.value === '[') {
+      if (key === 'export' || key === 'disabled') { clauses.push({ key, kind: 'flag' }); continue; }
+      const nx = this.peek();
+      if (!nx) { clauses.push({ key, kind: 'flag' }); continue; }
+      if (nx.kind === 'symbol' && nx.value === '[') {
         const items = this.parseClauseList();
         clauses.push({ key, kind: key === 'extends' ? 'list-of-refs' : 'list', items });
         continue;
       }
-      if (nextTok.kind === 'symbol' && nextTok.value === '(') {
+      if (nx.kind === 'symbol' && nx.value === '(') {
         clauses.push({ key, kind: 'params', params: this.parseParamSpecs() });
         continue;
       }
-      if (nextTok.kind === 'string') {
+      if (nx.kind === 'string') {
         this.i++;
-        clauses.push({ key, kind: 'value', value: nextTok.value });
+        clauses.push({ key, kind: 'value', value: nx.value });
         continue;
       }
-      if (nextTok.kind === 'word' && !VERBS.has(nextTok.value as Verb) &&
-          nextTok.value !== 'on' && nextTok.value !== 'transform' && nextTok.value !== 'default' &&
-          nextTok.value !== 'export' && nextTok.value !== 'input' && nextTok.value !== 'output' &&
-          nextTok.value !== 'appliesto' && nextTok.value !== 'params' && nextTok.value !== 'from') {
+      if (nx.kind === 'word' &&
+          nx.value !== 'export' && nx.value !== 'input' && nx.value !== 'output' &&
+          nx.value !== 'appliesto' && nx.value !== 'params' && nx.value !== 'extends' && nx.value !== 'tag' && nx.value !== 'from') {
         this.i++;
-        clauses.push({ key, kind: 'value', value: nextTok.value });
+        clauses.push({ key, kind: 'value', value: nx.value });
         continue;
       }
       clauses.push({ key, kind: 'flag' });
     }
     return clauses;
   }
+}
 
-  parseMember(): Member | null {
-    const t = this.peek();
-    if (!t) return null;
-    if (t.kind === 'symbol' && t.value === '.') {
-      this.i++;
-      const nameTok = this.next();
-      if (nameTok.kind !== 'word') throw new Error('prop name expected');
-      if (!this.eatSymbol('=')) throw new Error('= expected');
-      const valueTok = this.next();
-      const propValue = valueTok.kind === 'string' ? JSON.stringify(valueTok.value) : valueTok.value;
-      return { kind: 'prop', name: nameTok.value, propValue };
-    }
-    if (t.kind === 'word' && t.value === 'off') {
-      this.i++;
-      const eventTok = this.next();
-      if (eventTok.kind !== 'word') throw new Error('off <event> expected');
-      const event = eventTok.value;
-      let name: string | null = null;
-      const nextTok = this.peek();
-      if (nextTok && nextTok.kind === 'symbol' && nextTok.value === '*') {
-        this.i++;
-        name = null;
-      } else if (nextTok && nextTok.kind === 'word') {
-        this.i++;
-        name = nextTok.value;
-      }
-      if (!this.eatSymbol('(')) throw new Error('( expected');
-      if (!this.eatSymbol(')')) throw new Error(') expected');
-      return { kind: 'off', event, name };
-    }
-    if (t.kind === 'word' && t.value === 'on') {
-      this.i++;
-      const eventTok = this.next();
-      const event = eventTok.value;
-      let name: string | null = null;
-      const maybeName = this.peek();
-      const maybeParen = this.tokens[this.i + 1];
-      if (maybeName && maybeName.kind === 'word' && maybeParen && maybeParen.kind === 'symbol' && maybeParen.value === '(') {
-        this.i++;
-        name = maybeName.value;
-      }
-      if (!this.eatSymbol('(')) throw new Error('( expected after on <event> [name]');
-      if (!this.eatSymbol(')')) throw new Error(') expected');
-      const bodyTok = this.next();
-      if (bodyTok.kind !== 'body') throw new Error('{ body } expected');
-      return { kind: 'on', event, name, body: bodyTok.value };
-    }
-    if (t.kind === 'word' && (t.value === 'template' || t.value === 'style' || t.value === 'actions' || t.value === 'effects')) {
-      const kind = t.value as 'template' | 'style' | 'actions' | 'effects';
-      this.i++;
-      let scoped = false;
-      const nextTok = this.peek();
-      if (nextTok && nextTok.kind === 'word' && nextTok.value === 'scoped') { scoped = true; this.i++; }
-      const bodyTok = this.next();
-      if (bodyTok.kind !== 'body') throw new Error(`{ body } expected after ${kind}`);
-      return { kind, name: null, body: bodyTok.value, scoped };
-    }
-    if (t.kind === 'word' && (t.value === 'transform' || t.value === 'default')) {
-      const kind = t.value as 'transform' | 'default';
-      this.i++;
-      let name: string | null = null;
-      const nameTok = this.peek();
-      const maybeParen = this.tokens[this.i + 1];
-      if (nameTok && nameTok.kind === 'word' && maybeParen && maybeParen.kind === 'symbol' && maybeParen.value === '(') {
-        this.i++;
-        name = nameTok.value;
-      }
-      if (!this.eatSymbol('(')) throw new Error('( expected');
-      if (!this.eatSymbol(')')) throw new Error(') expected');
-      const bodyTok = this.next();
-      if (bodyTok.kind !== 'body') throw new Error('{ body } expected');
-      return { kind, name, body: bodyTok.value };
-    }
-    return null;
-  }
+function parseHeader(header: string): { name: string; clauses: Clause[] } {
+  const tokens = tokenize(header);
+  const p = new HeaderParser(tokens);
+  const nameTok = p.next();
+  const name = nameTok && nameTok.kind === 'word' ? nameTok.value : (nameTok?.value ?? '');
+  const clauses = p.parseClauses();
+  return { name, clauses };
+}
 
-  parseDeclaration(): Declaration | null {
-    const verbTok = this.peek();
-    if (!verbTok || verbTok.kind !== 'word' || !VERBS.has(verbTok.value as Verb)) return null;
-    const start = verbTok.offset;
-    const verb = verbTok.value as Verb;
-    this.i++;
-    const nameTok = this.next();
-    if (nameTok.kind !== 'word') throw new Error(`${verb} name expected`);
-    const clauses = this.parseClauses();
-    const members: Member[] = [];
-    while (true) {
-      const before = this.i;
-      if (!this.isMemberStart()) break;
-      const m = this.parseMember();
-      if (!m) { this.i = before; break; }
-      members.push(m);
-    }
-    const endOffset = this.tokens[this.i - 1]?.offset ?? start;
-    return {
-      verb,
-      name: nameTok.value,
-      clauses,
-      members,
-      sourceOffset: start,
-      sourceEndOffset: endOffset,
-    };
+const SIG_ON = /^(on|off)\s+(\S+)\s+(\*|\w+)?\s*\(\s*\)/;
+const SIG_FN = /^(transform|default)\s+(\*|\w+)?\s*\(\s*\)/;
+
+function nameOrNull(v: string | undefined): string | null {
+  if (v === undefined || v === '*') return null;
+  return v;
+}
+
+function parseSignatureMember(m: RawMember): Member {
+  const onM = SIG_ON.exec(m.header);
+  if (onM) {
+    const kind = onM[1] as 'on' | 'off';
+    if (kind === 'off') return { kind, event: onM[2], name: nameOrNull(onM[3]) };
+    return { kind, event: onM[2], name: nameOrNull(onM[3]), body: m.body };
   }
+  const fnM = SIG_FN.exec(m.header);
+  if (fnM) {
+    return { kind: fnM[1] as 'transform' | 'default', name: nameOrNull(fnM[2]), body: m.body };
+  }
+  throw new Error(`unrecognised signature member: ${m.header}`);
+}
+
+const SECTION_KIND: Record<string, Member['kind']> = {
+  props: 'props',
+  tpl: 'template',
+  template: 'template',
+  script: 'script',
+  actions: 'actions',
+  effects: 'effects',
+  style: 'style',
+};
+
+function parseMember(m: RawMember): Member | null {
+  if (m.kind === 'section') {
+    return { kind: SECTION_KIND[m.keyword], name: null, body: m.body, scoped: m.scoped };
+  }
+  if (m.kind === 'signature') return parseSignatureMember(m);
+  if (m.kind === 'property') {
+    const pm = /^\.(\w+)\s*=\s*(.+)$/.exec(m.header);
+    if (!pm) return null;
+    return { kind: 'prop', name: pm[1], propValue: pm[2].trim() };
+  }
+  return null;
+}
+
+function parseImportLine(line: string): ImportStatement {
+  // import <names> [from <path>]
+  const body = line.trim().replace(/^import\s+/, '');
+  const fromMatch = /\bfrom\s+"([^"]+)"\s*$/.exec(body);
+  const from = fromMatch ? fromMatch[1] : null;
+  const namesPart = fromMatch ? body.slice(0, fromMatch.index).trim() : body.trim();
+  const items = namesPart
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((seg) => {
+      const asM = /^(\S+)\s+as\s+(\S+)$/.exec(seg);
+      if (asM) return { source: asM[1], alias: asM[2] };
+      return { source: seg };
+    });
+  return { from, items, sourceOffset: 0, sourceEndOffset: 0 };
+}
+
+function blockToDeclaration(b: RawBlock): Declaration {
+  const { name, clauses } = parseHeader(b.header);
+  const members: Member[] = [];
+  for (const rm of b.members) {
+    if (rm.kind === 'import') continue; // component-level imports handled at emit level (future)
+    const mem = parseMember(rm);
+    if (mem) members.push(mem);
+  }
+  const verb = (VERBS.has(b.verb as Verb) ? b.verb : 'component') as Verb;
+  return {
+    verb,
+    name,
+    clauses,
+    members,
+    isDeclare: b.isDeclare,
+    declareKind: b.declareKind,
+    sourceOffset: 0,
+    sourceEndOffset: 0,
+  };
 }
 
 export function parseDtx(source: string): DtxAst {
-  const parser = new Parser(tokenize(source));
-  const imports: ImportStatement[] = [];
-  const declarations: Declaration[] = [];
-  while (parser.peek()) {
-    const imp = parser.parseImport();
-    if (imp) { imports.push(imp); continue; }
-    const decl = parser.parseDeclaration();
-    if (decl) { declarations.push(decl); continue; }
-    parser.i++;
-  }
+  const scan = scanSource(source);
+  const imports = scan.imports.map(parseImportLine);
+  const declarations = scan.blocks.filter((b) => !b.isDeclare).map(blockToDeclaration);
   return { imports, declarations };
 }
+
+export { scanSource };
