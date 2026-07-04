@@ -1,0 +1,29 @@
+component Login tag app-login
+
+script
+const s = state({ email: "", password: "" });
+end script
+
+actions
+function submit() {
+  host.dispatchEvent(new CustomEvent("login", {
+    detail: { email: s.email, password: s.password },
+    bubbles: true,
+  }));
+}
+end actions
+
+template
+<form class="login" @submit=${submit}>
+  <h1>Sign in</h1>
+  <input name="email" type="email" .value=${s.email} placeholder="Email"/>
+  <input name="password" type="password" .value=${s.password} placeholder="Password"/>
+  <button type="submit">Continue</button>
+</form>
+end template
+
+style scoped
+.login { display: grid; gap: 0.75rem; max-width: 20rem; }
+end style
+
+end component

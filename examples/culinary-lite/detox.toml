@@ -1,0 +1,7 @@
+# UIDetox resolver config for dotted-module imports.
+[resolve]
+includes = ["src"]
+extensions = [".dtx", ".md"]
+
+[build]
+outDir = "dist"

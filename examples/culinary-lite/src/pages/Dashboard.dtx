@@ -1,0 +1,21 @@
+component Dashboard tag app-dashboard
+
+props
+string user
+end props
+
+template
+<section class="dashboard">
+  <h1>Welcome, ${props.user}</h1>
+  <nav>
+    <a href="/ingredients">Ingredients</a>
+    <a href="/recipes">Recipes</a>
+  </nav>
+</section>
+end template
+
+style scoped
+.dashboard { padding: 1rem; }
+end style
+
+end component
