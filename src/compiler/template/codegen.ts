@@ -80,16 +80,25 @@ function refWrap(node: TplElement, inner: string): string {
 
 function elementExpr(node: TplElement): string {
   const useAttr = node.attrs.find((a) => a.name === 'use' && a.kind === 'static');
+  const bindAttr = node.attrs.find((a) => a.name === 'bind' && a.kind !== 'static');
   const paramAttrs = node.attrs.filter((a) => PARAM_ATTR_RE.test(a.name));
   const restAttrs = node.attrs.filter(
-    (a) => a !== useAttr && !paramAttrs.includes(a) && !a.name.startsWith('#'),
+    (a) =>
+      a !== useAttr &&
+      a !== bindAttr &&
+      !paramAttrs.includes(a) &&
+      !a.name.startsWith('#'),
   );
   const children = node.children.map(nodeExpr).join(', ');
-  const elCall = `__el(${q(node.tag)}, ${attrsExpr(restAttrs)}, [${children}], ctx)`;
-  if (!useAttr) return refWrap(node, elCall);
-  const specs = useSpecExpr(useAttr.value, paramAttrs);
-  const withUse = `(() => { const __el0 = ${elCall}; __use(__el0, ${specs}); return __el0; })()`;
-  return refWrap(node, withUse);
+  let expr = `__el(${q(node.tag)}, ${attrsExpr(restAttrs)}, [${children}], ctx)`;
+  if (useAttr) {
+    const specs = useSpecExpr(useAttr.value, paramAttrs);
+    expr = `(() => { const __el0 = ${expr}; __use(__el0, ${specs}); return __el0; })()`;
+  }
+  if (bindAttr) {
+    expr = `__bindField(${expr}, (${bindAttr.value}))`;
+  }
+  return refWrap(node, expr);
 }
 
 function childrenBlock(children: TplNode[]): string {

@@ -173,7 +173,7 @@ function emitImport(imp: ImportStatement): string {
 }
 
 function addTemplateHelpers(needed: Set<string>): void {
-  for (const n of ['__el', '__text', '__bind', '__if', '__for', '__case', '__ref', '__fragment', 'CASE_DEFAULT']) {
+  for (const n of ['__el', '__text', '__bind', '__bindField', '__use', '__if', '__for', '__case', '__ref', '__fragment', 'CASE_DEFAULT']) {
     needed.add(n);
   }
 }

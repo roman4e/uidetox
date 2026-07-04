@@ -18,6 +18,43 @@ export function __ref(ctx: TemplateCtx, key: string, el: Element): Element {
   return el;
 }
 
+/** Field-handle shape consumed by two-way form binding (decoupled from forms). */
+export interface BoundField {
+  value: unknown;
+  setValue(v: unknown): void;
+  setTouched(t: boolean): void;
+}
+
+function fieldKind(el: HTMLElement): string {
+  const tag = el.tagName.toLowerCase();
+  if (tag === 'select') return 'select';
+  if (tag === 'textarea') return 'text';
+  const type = (el.getAttribute('type') ?? 'text').toLowerCase();
+  return type;
+}
+
+/** Two-way binds a form field to an input/select/textarea element. */
+export function __bindField(el: HTMLElement, field: BoundField): HTMLElement {
+  const kind = fieldKind(el);
+  const input = el as HTMLInputElement;
+  effect(() => {
+    const v = field.value;
+    if (kind === 'checkbox') input.checked = !!v;
+    else input.value = v === null || v === undefined ? '' : String(v);
+  });
+  const read = (): unknown => {
+    if (kind === 'checkbox') return input.checked;
+    if (kind === 'number' || kind === 'range') return input.value === '' ? undefined : Number(input.value);
+    return input.value;
+  };
+  const onInput = () => field.setValue(read());
+  const onBlur = () => field.setTouched(true);
+  el.addEventListener('input', onInput);
+  el.addEventListener('change', onInput);
+  el.addEventListener('blur', onBlur);
+  return el;
+}
+
 export type AttrKind =
   | 'static'
   | 'expression'

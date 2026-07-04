@@ -7,6 +7,7 @@ export type { TaskOptions } from './task.js';
 export {
   CASE_DEFAULT,
   __bind,
+  __bindField,
   __case,
   __el,
   __for,
