@@ -1,0 +1,20 @@
+component IngredientList export tag ingredient-list
+
+props
+array items
+end props
+
+template
+<virtual-for each=${props.items} item="ing" key="ing.id" row-height="48" overscan="6">
+  <div class="ingredient-row">
+    <span class="name">${ing.name}</span>
+    <span class="cat">${ing.category}</span>
+  </div>
+</virtual-for>
+end template
+
+style scoped
+.ingredient-row { display: flex; gap: 1rem; height: 48px; align-items: center; }
+end style
+
+end component
