@@ -12,7 +12,7 @@ describe('IngredientForm example', () => {
   it('compiles the forms example .dtx end-to-end', () => {
     const { code } = compileDtx(src);
     expect(code).toContain('defineComponent');
-    expect(code).toContain("from 'uidetox/forms'");
+    expect(code).toContain('from "uidetox/forms"');
     // bind attribute lowered to __bindField, array field via <for> + helpers
     expect(code).toContain('__bindField(');
     expect(code).toContain("fm.field('name')");

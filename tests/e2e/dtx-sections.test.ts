@@ -9,7 +9,7 @@ describe('dtx sections e2e', () => {
     const { code } = compileDtx(src);
     // component + tag
     expect(code).toContain('export const Counter = defineComponent({');
-    expect(code).toContain("tag: 'app-counter'");
+    expect(code).toContain('tag: "app-counter"');
     expect(code).toContain('props: ["start"]');
     // script (private boot)
     expect(code).toContain('const s = state({ count: props.start ?? 0 });');

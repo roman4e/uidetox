@@ -3,7 +3,7 @@ import { transformDirectives } from '../template/transform.js';
 import { codegen } from '../template/codegen.js';
 import type { Declaration } from './types.js';
 
-function sq(v: string): string { return `'${v.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`; }
+function sq(v: string): string { return JSON.stringify(v); }
 
 const PROP_TOKEN = /(?:^|[;,\n])\s*(?:\w+\??\s+)?(\w+)/;
 

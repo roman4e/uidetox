@@ -391,9 +391,26 @@ template is built (refs populated); `style scoped` detects `scoped` on the heade
 `task` / `task idle` wraps the body as `task(async (signal) => { … })`.
 
 `declare <kind> <name> … end <kind>` defines a reusable fragment (`tpl`, `style`,
-`props`, `script`, `actions`, `effects`). Imports are JS-style:
-`import form, f from "uidetox/forms"` (comma names, optional `… as alias`,
-optional `from`; bare `import name` is a side-effect import).
+`props`, `script`, `actions`, `effects`).
+
+**Imports.** `import <name> from "path"` — `<name>` is a named import (≡ TS
+`{ name }`); several with commas, optional `… as alias`. Namespace form:
+`import * as Ns from "path"`. Bare `import name` is a side-effect import.
+
+Module paths resolve Python-style, **dotted**:
+
+- `"a.b"` → `./a/b.dtx`, else the package form `./a/b/module.dtx`, searched
+  first beside the importer then in each configured `includes` root.
+- A specifier containing `/` (`"uidetox/forms"`, `"./x.dtx"`) is an npm/explicit
+  path — passed through verbatim.
+
+```
+import Card from "components.card"        → import { Card } from "./components/card.js"
+import * as Utils from "lib.util"         → import * as Utils from "./lib/util.js"
+import form, f from "uidetox/forms"       → import { form, f } from "uidetox/forms"
+```
+
+All emitted string literals use **double quotes**.
 
 **Trait** with inheritance + `off`:
 

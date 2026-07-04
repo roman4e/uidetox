@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { isAbsolute, join } from 'node:path';
+import { isAbsolute, join, relative } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 
 export interface DetoxConfig {
@@ -57,4 +57,41 @@ export function resolveImport(
     }
   }
   return null;
+}
+
+export interface SpecifierOptions {
+  /** Directory of the importing file; enables filesystem resolution. */
+  baseDir?: string;
+  /** Extra roots searched Python-style when the module is not found beside the importer. */
+  includes?: string[];
+}
+
+function toRelative(baseDir: string, target: string): string {
+  let rel = relative(baseDir, target).replace(/\\/g, '/');
+  if (!rel.startsWith('.')) rel = './' + rel;
+  return rel.replace(/\.dtx$/, '.js');
+}
+
+/**
+ * Resolves a `.dtx` import specifier (Python-style, dotted).
+ *
+ * - A specifier containing `/` is a bare/npm or explicit path — returned verbatim.
+ * - Otherwise dots become path separators (`a.b` → `a/b`) and the module is looked
+ *   up as `<slash>.dtx`, then the package form `<slash>/module.dtx`, first beside
+ *   the importer (`baseDir`) then in each `includes` root (like Python's sys.path).
+ * - With no `baseDir` (or nothing found) it falls back to the direct `./<slash>.js` form.
+ */
+export function resolveSpecifier(spec: string, opts: SpecifierOptions = {}): string {
+  if (spec.includes('/')) return spec;
+  const slash = spec.replace(/\./g, '/');
+  if (opts.baseDir) {
+    const roots = [opts.baseDir, ...(opts.includes ?? [])];
+    for (const root of roots) {
+      const direct = join(root, `${slash}.dtx`);
+      if (existsSync(direct)) return toRelative(opts.baseDir, direct);
+      const pkg = join(root, slash, 'module.dtx');
+      if (existsSync(pkg)) return toRelative(opts.baseDir, pkg);
+    }
+  }
+  return `./${slash}.js`;
 }

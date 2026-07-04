@@ -11,7 +11,7 @@ on blur child_handler() { this.el.dataset.child = '1'; }
 `;
     const { code } = compileDtx(src);
     expect(code).toContain('extends: [base]');
-    expect(code).toContain("off: { 'blur':");
+    expect(code).toContain('off: { "blur":');
     expect(code).toContain('base_handler');
     expect(code).toContain('child_handler');
   });

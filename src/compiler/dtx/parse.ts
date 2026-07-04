@@ -154,11 +154,19 @@ function parseMember(m: RawMember): Member | null {
 }
 
 function parseImportLine(line: string): ImportStatement {
-  // import <names> [from <path>]
+  // import <names> from "path"   (names ≡ TS `{ names }`)
+  // import * as Name from "path" (namespace)
+  // import <name>                (side-effect)
   const body = line.trim().replace(/^import\s+/, '');
   const fromMatch = /\bfrom\s+"([^"]+)"\s*$/.exec(body);
   const from = fromMatch ? fromMatch[1] : null;
   const namesPart = fromMatch ? body.slice(0, fromMatch.index).trim() : body.trim();
+
+  const nsMatch = /^\*\s+as\s+(\S+)$/.exec(namesPart);
+  if (nsMatch) {
+    return { from, items: [], namespace: nsMatch[1], sourceOffset: 0, sourceEndOffset: 0 };
+  }
+
   const items = namesPart
     .split(',')
     .map((s) => s.trim())

@@ -31,7 +31,7 @@ end props
     const { code } = compileDtx(src);
     expect(code).toContain('export const cardHeader = (ctx) =>');
     expect(code).toContain('__el("header"');
-    expect(code).toContain("export const surface = '.surface { border-radius: 8px; }'");
+    expect(code).toContain('export const surface = ".surface { border-radius: 8px; }"');
     expect(code).toContain('export const pagination = ["page","perPage"]');
   });
 });

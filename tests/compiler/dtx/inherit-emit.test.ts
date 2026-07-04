@@ -9,7 +9,7 @@ off blur *()
 `;
     const { code } = compileDtx(src);
     expect(code).toContain('extends: [a, numericOnly]');
-    expect(code).toContain("off: { 'blur': 'all' }");
+    expect(code).toContain('off: { "blur": "all" }');
   });
 
   it('emits filter extends + offTransform', () => {
@@ -18,12 +18,12 @@ off transform *()
 `;
     const { code } = compileDtx(src);
     expect(code).toContain('extends: [base]');
-    expect(code).toContain("offTransform: 'all'");
+    expect(code).toContain('offTransform: "all"');
   });
 
   it('forwards token extends to createToken opts', () => {
     const src = `token admin-user extends [current-user] User\n`;
     const { code } = compileDtx(src);
-    expect(code).toContain("createToken<User>('admin-user', { extends: [currentUser] })");
+    expect(code).toContain('createToken<User>("admin-user", { extends: [currentUser] })');
   });
 });

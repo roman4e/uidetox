@@ -52,6 +52,8 @@ export interface ImportStatement {
   /** Explicit module path, or null for auto-resolve by name. */
   from: string | null;
   items: Array<{ source: string; alias?: string }>;
+  /** Namespace import binding for `import * as Name from "..."`. */
+  namespace?: string;
   sourceOffset: number;
   sourceEndOffset: number;
 }

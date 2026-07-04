@@ -10,9 +10,9 @@ on blur trim_handler() {
 }
 `;
     const { code } = compileDtx(src);
-    expect(code).toContain("import { defineTrait } from 'uidetox';");
-    expect(code).toContain("export const trim = defineTrait('trim', {");
-    expect(code).toContain("appliesTo: ['input', 'textarea']");
+    expect(code).toContain('import { defineTrait } from "uidetox";');
+    expect(code).toContain('export const trim = defineTrait("trim", {');
+    expect(code).toContain('appliesTo: ["input", "textarea"]');
     expect(code).toContain('paramsSchema: { savedKey');
     expect(code).toContain('handlers: {');
     expect(code).toContain('this.el.value.trim()');
@@ -23,8 +23,8 @@ on blur trim_handler() {
 transform lc() { return v.toLowerCase(); }
 `;
     const { code } = compileDtx(src);
-    expect(code).toContain("import { defineFilter } from 'uidetox';");
-    expect(code).toContain("export const lowercase = defineFilter('lowercase', {");
+    expect(code).toContain('import { defineFilter } from "uidetox";');
+    expect(code).toContain('export const lowercase = defineFilter("lowercase", {');
     expect(code).toContain('return v.toLowerCase()');
   });
 
@@ -32,6 +32,6 @@ transform lc() { return v.toLowerCase(); }
     const src = `import trim, numeric-only as num from "./x.dtx"
 `;
     const { code } = compileDtx(src);
-    expect(code).toContain("import { trim, numericOnly as num } from './x.dtx';");
+    expect(code).toContain('import { trim, numericOnly as num } from "./x.dtx";');
   });
 });

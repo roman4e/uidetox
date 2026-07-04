@@ -16,16 +16,16 @@ describe('showcase e2e', () => {
   it('compiles the inputs.dtx trait file with inheritance', () => {
     const src = readFileSync(join(process.cwd(), 'examples/showcase/traits/inputs.dtx'), 'utf8');
     const { code } = compileDtx(src);
-    expect(code).toContain("defineTrait('trim'");
-    expect(code).toContain("defineTrait('uppercase'");
+    expect(code).toContain('defineTrait("trim"');
+    expect(code).toContain('defineTrait("uppercase"');
     expect(code).toContain('extends: [trim]');
   });
 
   it('compiles the text.dtx filter file with inheritance', () => {
     const src = readFileSync(join(process.cwd(), 'examples/showcase/filters/text.dtx'), 'utf8');
     const { code } = compileDtx(src);
-    expect(code).toContain("defineFilter('lowercase'");
-    expect(code).toContain("defineFilter('title-case'");
+    expect(code).toContain('defineFilter("lowercase"');
+    expect(code).toContain('defineFilter("title-case"');
     expect(code).toContain('extends: [lowercase]');
   });
 

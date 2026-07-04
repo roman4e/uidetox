@@ -13,11 +13,14 @@ import type {
   ParamSpec,
 } from './types.js';
 
+import { resolveSpecifier, type SpecifierOptions } from './resolve.js';
+
 const RUNTIME_MODULE = 'uidetox';
 
+// All emitted string literals use double quotes (JSON.stringify handles escaping,
+// including newlines in multi-line style/script bodies).
 function sq(v: unknown): string {
-  if (typeof v !== 'string') return JSON.stringify(v);
-  return `'${v.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+  return JSON.stringify(v);
 }
 
 function extendsRef(decl: Declaration): string {
@@ -32,7 +35,7 @@ function offMap(members: Member[], event = 'event'): string {
   if (offs.length === 0) return '';
   if (event === 'transform') {
     const names = offs.map((m) => m.name);
-    if (names.includes(null)) return `offTransform: 'all'`;
+    if (names.includes(null)) return `offTransform: "all"`;
     return `offTransform: [${names.map((n) => sq(n as string)).join(', ')}]`;
   }
   const byEvent = new Map<string, Array<string | null>>();
@@ -42,7 +45,7 @@ function offMap(members: Member[], event = 'event'): string {
   }
   const entries: string[] = [];
   for (const [ev, names] of byEvent) {
-    if (names.includes(null)) entries.push(`${sq(ev)}: 'all'`);
+    if (names.includes(null)) entries.push(`${sq(ev)}: "all"`);
     else entries.push(`${sq(ev)}: [${names.map((n) => sq(n as string)).join(', ')}]`);
   }
   return `off: { ${entries.join(', ')} }`;
@@ -157,19 +160,21 @@ function emitProvideDecl(decl: Declaration): string {
   return `registry.provide(${tokenName}, function() {${providerBody}\n});\n`;
 }
 
-function emitImport(imp: ImportStatement): string {
-  // Bare `import name` (no from) → side-effect import that registers the tag.
+function emitImport(imp: ImportStatement, opts: SpecifierOptions): string {
+  // Bare `import name` (no from) → side-effect import, resolved as a dtx specifier.
   if (imp.from === null) {
     const first = imp.items[0]?.source ?? '';
-    return `import ${sq('./' + first)};\n`;
+    return `import ${sq(resolveSpecifier(first, opts))};\n`;
   }
-  if (imp.items.length === 0) return `import ${sq(imp.from)};\n`;
+  const spec = resolveSpecifier(imp.from, opts);
+  if (imp.namespace) return `import * as ${imp.namespace} from ${sq(spec)};\n`;
+  if (imp.items.length === 0) return `import ${sq(spec)};\n`;
   const names = imp.items.map((it) => {
     const src = kebabToCamel(it.source);
     const alias = it.alias ? kebabToCamel(it.alias) : undefined;
     return alias ? `${src} as ${alias}` : src;
   }).join(', ');
-  return `import { ${names} } from ${sq(imp.from)};\n`;
+  return `import { ${names} } from ${sq(spec)};\n`;
 }
 
 function addTemplateHelpers(needed: Set<string>): void {
@@ -221,13 +226,13 @@ function emitDeclare(d: DeclareDecl): string {
   return `export const ${camel} = ${sq(d.body)};\n`;
 }
 
-export function emitDtx(ast: DtxAst): { code: string } {
+export function emitDtx(ast: DtxAst, opts: SpecifierOptions = {}): { code: string } {
   const runtimeImports = collectImports(ast);
   const lines: string[] = [];
   for (const name of runtimeImports) {
-    lines.push(`import { ${name} } from '${RUNTIME_MODULE}';`);
+    lines.push(`import { ${name} } from ${sq(RUNTIME_MODULE)};`);
   }
-  for (const imp of ast.imports) lines.push(emitImport(imp).trimEnd());
+  for (const imp of ast.imports) lines.push(emitImport(imp, opts).trimEnd());
   lines.push('');
   for (const d of ast.declares ?? []) lines.push(emitDeclare(d));
   for (const decl of ast.declarations) {
@@ -240,9 +245,9 @@ export function emitDtx(ast: DtxAst): { code: string } {
   return { code: lines.join('\n') };
 }
 
-export function compileDtxSource(source: string): { code: string; map: string } {
+export function compileDtxSource(source: string, opts: SpecifierOptions = {}): { code: string; map: string } {
   const ast = parseDtx(source);
-  const { code } = emitDtx(ast);
+  const { code } = emitDtx(ast, opts);
   const map = JSON.stringify({ version: 3, sources: ['<dtx>'], names: [], mappings: '' });
   return { code, map };
 }

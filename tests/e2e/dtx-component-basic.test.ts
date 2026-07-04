@@ -8,7 +8,7 @@ describe('dtx component e2e', () => {
     const src = readFileSync(join(process.cwd(), 'examples/dsl/components/AppCard.dtx'), 'utf8');
     const { code } = compileDtx(src);
     expect(code).toContain('export const AppCard = defineComponent({');
-    expect(code).toContain("tag: 'app-card'");
+    expect(code).toContain('tag: "app-card"');
     expect(code).toContain('__el("div"');
     expect(code).toContain('padding: 1rem');
   });

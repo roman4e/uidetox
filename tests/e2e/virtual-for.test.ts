@@ -16,6 +16,6 @@ describe('IngredientList virtual-for example', () => {
     expect(code).toContain('(ing, index) => (ing.id)');
     expect(code).toContain('rowHeight: (48)');
     expect(code).toContain('overscan: (6)');
-    expect(code).toContain("import { __virtualFor } from 'uidetox'");
+    expect(code).toContain('import { __virtualFor } from "uidetox"');
   });
 });

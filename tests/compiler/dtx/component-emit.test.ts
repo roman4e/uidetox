@@ -18,7 +18,7 @@ end component
     const { code } = compileDtx(src);
     expect(code).toContain('import { defineComponent');
     expect(code).toContain("export const AppCard = defineComponent({");
-    expect(code).toContain("tag: 'app-card'");
+    expect(code).toContain('tag: "app-card"');
     expect(code).toContain('__el("div"');
     expect(code).toContain('.card { padding: 1rem; }');
   });
