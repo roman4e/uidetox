@@ -16,6 +16,7 @@ export {
   __ref,
   __text,
   __use,
+  __virtualFor,
 } from './domHelpers.js';
 export { createToken, registry } from './registry.js';
 export type { RegistryScope, Token } from './registry.js';

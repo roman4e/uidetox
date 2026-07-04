@@ -4,6 +4,7 @@ export type TplNode =
   | TplInterpolation
   | TplIf
   | TplFor
+  | TplVirtualFor
   | TplCase;
 
 export interface TplElement {
@@ -47,6 +48,21 @@ export interface TplFor {
   each: string;
   itemVar: string;
   keyExpr: string | null;
+  body: TplNode[];
+}
+
+export interface TplVirtualFor {
+  type: 'virtual-for';
+  each: string;
+  itemVar: string;
+  keyExpr: string | null;
+  /** Code expression for the row height in px. */
+  rowHeight: string;
+  /** Code expression for overscan, or null for the default. */
+  overscan: string | null;
+  /** Code expression for the scroll-parent selector, or null. */
+  scrollParent: string | null;
+  debug: boolean;
   body: TplNode[];
 }
 

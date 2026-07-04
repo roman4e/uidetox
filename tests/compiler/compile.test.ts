@@ -23,7 +23,7 @@ describe('compile()', () => {
   it('produces an ES module that calls defineComponent for the tag', () => {
     const { js, tag } = compile(SFC);
     expect(tag).toBe('x-greeter');
-    expect(js).toContain('import { defineComponent, __el, __text, __bind, __bindField, __if, __for, __case, __ref, __fragment, CASE_DEFAULT } from "uidetox";');
+    expect(js).toContain('import { defineComponent, __el, __text, __bind, __bindField, __if, __for, __virtualFor, __case, __ref, __fragment, CASE_DEFAULT } from "uidetox";');
     expect(js).toContain('defineComponent({');
     expect(js).toContain('tag: "x-greeter"');
     expect(js).toContain('__el("span"');

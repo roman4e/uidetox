@@ -1,6 +1,7 @@
 import type { TplElement, TplNode } from './ast.js';
 import { transformIf } from '../directives/ifDirective.js';
 import { transformFor } from '../directives/forDirective.js';
+import { transformVirtualFor } from '../directives/virtualForDirective.js';
 import { transformCase } from '../directives/caseDirective.js';
 
 export type DirectiveTransform = (
@@ -12,6 +13,7 @@ export type DirectiveTransform = (
 const DIRECTIVES: Record<string, DirectiveTransform> = {
   if: transformIf,
   for: transformFor,
+  'virtual-for': transformVirtualFor,
   case: transformCase,
 };
 
@@ -47,6 +49,9 @@ function recurseInto(node: TplNode): TplNode {
     };
   }
   if (node.type === 'for') {
+    return { ...node, body: transformDirectives(node.body) };
+  }
+  if (node.type === 'virtual-for') {
     return { ...node, body: transformDirectives(node.body) };
   }
   if (node.type === 'case') {

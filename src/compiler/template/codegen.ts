@@ -7,6 +7,7 @@ import type {
   TplInterpolation,
   TplNode,
   TplText,
+  TplVirtualFor,
 } from './ast.js';
 
 function q(s: string): string {
@@ -28,6 +29,7 @@ function nodeExpr(node: TplNode): string {
   if (node.type === 'interpolation') return interpolationExpr(node);
   if (node.type === 'if') return ifExpr(node);
   if (node.type === 'for') return forExpr(node);
+  if (node.type === 'virtual-for') return virtualForExpr(node);
   if (node.type === 'case') return caseExpr(node);
   return elementExpr(node);
 }
@@ -119,6 +121,18 @@ function forExpr(node: TplFor): string {
     ? `(${node.itemVar}, index) => (${node.keyExpr})`
     : `(${node.itemVar}, index) => index`;
   return `__for(() => (${node.each}), ${key}, (${node.itemVar}, index, ctx) => ${body}, ctx)`;
+}
+
+function virtualForExpr(node: TplVirtualFor): string {
+  const body = childrenBlock(node.body);
+  const key = node.keyExpr
+    ? `(${node.itemVar}, index) => (${node.keyExpr})`
+    : `(${node.itemVar}, index) => index`;
+  const opts: string[] = [`rowHeight: (${node.rowHeight})`];
+  if (node.overscan !== null) opts.push(`overscan: (${node.overscan})`);
+  if (node.scrollParent !== null) opts.push(`scrollParent: (${node.scrollParent})`);
+  if (node.debug) opts.push('debug: true');
+  return `__virtualFor(() => (${node.each}), ${key}, (${node.itemVar}, index, ctx) => ${body}, ctx, { ${opts.join(', ')} })`;
 }
 
 function caseExpr(node: TplCase): string {

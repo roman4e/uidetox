@@ -2,6 +2,7 @@ import { effect } from './effect.js';
 import type { TemplateCtx } from './component.js';
 import { renderIf } from './directives/ifBlock.js';
 import { renderFor } from './directives/forBlock.js';
+import { renderVirtualFor, type VirtualForOptions } from './directives/virtualForBlock.js';
 import { CASE_DEFAULT, renderCase, type CaseArm } from './directives/caseBlock.js';
 import { installTraits, type UseSpec } from './traits/install.js';
 
@@ -209,6 +210,16 @@ export function __for<T>(
     renderFor(anchor.parentNode, anchor, source, keyOf, bodyFactory, ctx);
   });
   return anchor;
+}
+
+export function __virtualFor<T>(
+  source: () => T[],
+  keyOf: (item: T, index: number) => unknown,
+  bodyFactory: (item: T, index: number, ctx: TemplateCtx) => Node,
+  ctx: TemplateCtx,
+  opts: VirtualForOptions,
+): Node {
+  return renderVirtualFor(source, keyOf, bodyFactory, ctx, opts);
 }
 
 export function __case(
