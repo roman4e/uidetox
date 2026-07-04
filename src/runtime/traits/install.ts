@@ -51,6 +51,10 @@ export function installTraits(_root: Element, useMap: Map<Element, UseSpec[]>): 
       if (!trait) continue;
       const props = getMergedProps(trait);
       const context = { el, event: null as Event | null, params: spec.params, ...props };
+      if (trait.attach) {
+        const cleanup = trait.attach(el, spec.params);
+        if (typeof cleanup === 'function') disposals.push(cleanup);
+      }
       const merged = getMergedHandlers(trait);
       for (const [event, handlers] of Object.entries(merged)) {
         for (const handler of handlers) {

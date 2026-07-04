@@ -8,6 +8,24 @@ export function defineTrait(name: string, spec: Omit<TraitDescriptor, 'name'>): 
   return descriptor;
 }
 
+/**
+ * Registers an imperative behavior trait (drag & drop, etc.) with only an
+ * `attach` lifecycle — no declarative handlers/props.
+ */
+export function defineBehaviorTrait(
+  name: string,
+  appliesTo: string[],
+  attach: NonNullable<TraitDescriptor['attach']>,
+): TraitDescriptor {
+  return defineTrait(name, {
+    appliesTo,
+    paramsSchema: {},
+    props: () => ({}),
+    handlers: {},
+    attach,
+  });
+}
+
 export function getTrait(name: string): TraitDescriptor | undefined {
   return registry.get(name);
 }
