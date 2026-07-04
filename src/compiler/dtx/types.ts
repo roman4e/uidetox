@@ -54,7 +54,15 @@ export interface ImportStatement {
   sourceEndOffset: number;
 }
 
+export interface DeclareDecl {
+  kind: string;
+  name: string;
+  body: string;
+  scoped?: boolean;
+}
+
 export interface DtxAst {
   imports: ImportStatement[];
   declarations: Declaration[];
+  declares: DeclareDecl[];
 }

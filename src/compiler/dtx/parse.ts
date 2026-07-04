@@ -194,7 +194,13 @@ export function parseDtx(source: string): DtxAst {
   const scan = scanSource(source);
   const imports = scan.imports.map(parseImportLine);
   const declarations = scan.blocks.filter((b) => !b.isDeclare).map(blockToDeclaration);
-  return { imports, declarations };
+  const declares = scan.declares.map((d) => ({
+    kind: d.kind,
+    name: d.name,
+    body: d.body,
+    scoped: d.scoped,
+  }));
+  return { imports, declarations, declares };
 }
 
 export { scanSource };

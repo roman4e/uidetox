@@ -26,9 +26,17 @@ export interface RawBlock {
   members: RawMember[];
 }
 
+export interface RawDeclare {
+  kind: string;
+  name: string;
+  body: string;
+  scoped?: boolean;
+}
+
 export interface ScanResult {
   imports: string[];
   blocks: RawBlock[];
+  declares: RawDeclare[];
 }
 
 function firstWord(line: string): string {
@@ -87,6 +95,7 @@ export function scanSource(source: string): ScanResult {
   const lines = source.split('\n');
   const imports: string[] = [];
   const blocks: RawBlock[] = [];
+  const declares: RawDeclare[] = [];
   let i = 0;
 
   while (i < lines.length) {
@@ -100,20 +109,20 @@ export function scanSource(source: string): ScanResult {
       continue;
     }
 
-    const isDeclare = fw === 'declare';
-    if (VERB_KEYWORDS.has(fw) || isDeclare) {
-      let verb: string;
-      let declareKind: string | undefined;
-      let header: string;
-      if (isDeclare) {
-        const parts = line.trim().split(/\s+/);
-        declareKind = parts[1];
-        verb = declareKind;
-        header = parts.slice(1).join(' ');
-      } else {
-        verb = fw;
-        header = line.trim().slice(fw.length).trim();
-      }
+    if (fw === 'declare') {
+      const parts = line.trim().split(/\s+/);
+      const kind = parts[1];
+      const name = parts[2] ?? '';
+      const scoped = /\bscoped\b/.test(line);
+      const cap = captureSection(lines, i + 1);
+      declares.push({ kind, name, body: cap.body, scoped });
+      i = cap.next;
+      continue;
+    }
+
+    if (VERB_KEYWORDS.has(fw)) {
+      const verb = fw;
+      const header = line.trim().slice(fw.length).trim();
       i++;
 
       const members: RawMember[] = [];
@@ -126,7 +135,7 @@ export function scanSource(source: string): ScanResult {
           const parts = mLine.trim().split(/\s+/);
           // end <verb> closes the declaration; other ends already consumed by sections
           i++;
-          if (parts[1] === verb || (isDeclare && parts[1] === declareKind)) break;
+          if (parts[1] === verb) break;
           continue;
         }
         if (mfw === 'import') {
@@ -157,12 +166,12 @@ export function scanSource(source: string): ScanResult {
         i++;
       }
 
-      blocks.push({ verb, header, isDeclare, declareKind, members });
+      blocks.push({ verb, header, isDeclare: false, members });
       continue;
     }
 
     i++;
   }
 
-  return { imports, blocks };
+  return { imports, blocks, declares };
 }

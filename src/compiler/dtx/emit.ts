@@ -1,8 +1,12 @@
 import { kebabToCamel } from './namespace.js';
 import { parseDtx } from './parse.js';
 import { emitComponent } from './component.js';
+import { parseTemplate } from '../template/parse.js';
+import { transformDirectives } from '../template/transform.js';
+import { codegen } from '../template/codegen.js';
 import type {
   Declaration,
+  DeclareDecl,
   DtxAst,
   ImportStatement,
   Member,
@@ -168,6 +172,12 @@ function emitImport(imp: ImportStatement): string {
   return `import { ${names} } from ${sq(imp.from)};\n`;
 }
 
+function addTemplateHelpers(needed: Set<string>): void {
+  for (const n of ['__el', '__text', '__bind', '__if', '__for', '__case', '__ref', '__fragment', 'CASE_DEFAULT']) {
+    needed.add(n);
+  }
+}
+
 function collectImports(ast: DtxAst): Set<string> {
   const needed = new Set<string>();
   for (const decl of ast.declarations) {
@@ -177,18 +187,38 @@ function collectImports(ast: DtxAst): Set<string> {
     if (decl.verb === 'provide') needed.add('registry');
     if (decl.verb === 'component') {
       needed.add('defineComponent');
-      needed.add('__el');
-      needed.add('__text');
-      needed.add('__bind');
-      needed.add('__if');
-      needed.add('__for');
-      needed.add('__case');
-      needed.add('__ref');
-      needed.add('__fragment');
-      needed.add('CASE_DEFAULT');
+      addTemplateHelpers(needed);
     }
   }
+  for (const d of ast.declares ?? []) {
+    if (d.kind === 'tpl' || d.kind === 'template') addTemplateHelpers(needed);
+  }
   return needed;
+}
+
+function emitDeclare(d: DeclareDecl): string {
+  const camel = kebabToCamel(d.name);
+  const kind = d.kind === 'tpl' ? 'template' : d.kind;
+  if (kind === 'template') {
+    const ast = transformDirectives(parseTemplate(d.body));
+    const body = codegen(ast);
+    return `export const ${camel} = (ctx) => ${body};\n`;
+  }
+  if (kind === 'style') {
+    return `export const ${camel} = ${sq(d.body)};\n`;
+  }
+  if (kind === 'props') {
+    const names: string[] = [];
+    for (const line of d.body.split('\n')) {
+      const parts = line.trim().split(/\s+/);
+      if (parts.length >= 2) names.push(parts[1]);
+    }
+    return `export const ${camel} = ${JSON.stringify(names)};\n`;
+  }
+  if (kind === 'script' || kind === 'actions' || kind === 'effects') {
+    return `export function ${camel}(ctx) {\n${d.body}\n}\n`;
+  }
+  return `export const ${camel} = ${sq(d.body)};\n`;
 }
 
 export function emitDtx(ast: DtxAst): { code: string } {
@@ -199,6 +229,7 @@ export function emitDtx(ast: DtxAst): { code: string } {
   }
   for (const imp of ast.imports) lines.push(emitImport(imp).trimEnd());
   lines.push('');
+  for (const d of ast.declares ?? []) lines.push(emitDeclare(d));
   for (const decl of ast.declarations) {
     if (decl.verb === 'trait') lines.push(emitTraitDecl(decl));
     else if (decl.verb === 'filter') lines.push(emitFilterDecl(decl));
