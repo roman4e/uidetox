@@ -2,6 +2,7 @@ import { setCurrentHost } from './emits.js';
 import { effect } from './effect.js';
 import { registry } from './registry.js';
 import { state } from './state.js';
+import { task, type TaskOptions } from './task.js';
 
 export interface TemplateCtx {
   props: Record<string, unknown>;
@@ -12,6 +13,8 @@ export interface TemplateCtx {
   findAll: (selector: string) => Element[];
   /** Instance-scoped effect — auto-disposed on disconnect. */
   effect: (fn: () => void | (() => void)) => () => void;
+  /** Detached async reactive task — auto-disposed on disconnect. */
+  task: (fn: (signal: AbortSignal) => void | Promise<void>, opts?: TaskOptions) => () => void;
   /** Dispatch a bubbling composed CustomEvent from the host. */
   emit: (name: string, detail?: unknown) => void;
   /** The global hierarchical Registry. */
@@ -74,6 +77,11 @@ export function defineComponent(options: ComponentOptions): void {
         findAll: (selector) => Array.from(this.querySelectorAll(selector)),
         effect: (fn) => {
           const dispose = effect(fn);
+          this._disposers.push(dispose);
+          return dispose;
+        },
+        task: (fn, opts) => {
+          const dispose = task(fn, opts);
           this._disposers.push(dispose);
           return dispose;
         },

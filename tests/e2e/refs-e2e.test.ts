@@ -23,7 +23,7 @@ describe('refs e2e', () => {
     const { js } = compile(SFC);
     expect(js).toContain('__ref(ctx, "email"');
     expect(js).toContain('__ref(ctx, "submitBtn"');
-    expect(js).toContain('const { props, host, refs, ref, find, findAll, effect, emit, registry } = ctx;');
+    expect(js).toContain('const { props, host, refs, ref, find, findAll, effect, emit, registry, task } = ctx;');
     expect(js).toContain('__ref');
   });
 });

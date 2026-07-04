@@ -1,5 +1,5 @@
 export const VERB_KEYWORDS = new Set(['component', 'trait', 'filter', 'token', 'provide', 'router']);
-export const SECTION_KEYWORDS = new Set(['props', 'tpl', 'template', 'script', 'actions', 'effects', 'style']);
+export const SECTION_KEYWORDS = new Set(['props', 'tpl', 'template', 'script', 'actions', 'effects', 'style', 'task']);
 export const SIGNATURE_KEYWORDS = new Set(['on', 'off', 'transform', 'default']);
 const MEMBER_KEYWORDS = new Set([...SECTION_KEYWORDS, ...SIGNATURE_KEYWORDS]);
 const ALL_TERMINATORS = new Set([

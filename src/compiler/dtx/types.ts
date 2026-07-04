@@ -27,12 +27,14 @@ export interface Member {
     | 'actions'
     | 'effects'
     | 'script'
-    | 'props';
+    | 'props'
+    | 'task';
   event?: string;
   name: string | null;
   body?: string;
   propValue?: string;
   scoped?: boolean;
+  idle?: boolean;
 }
 
 export interface Declaration {

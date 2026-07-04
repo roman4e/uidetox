@@ -136,11 +136,13 @@ const SECTION_KIND: Record<string, Member['kind']> = {
   actions: 'actions',
   effects: 'effects',
   style: 'style',
+  task: 'task',
 };
 
 function parseMember(m: RawMember): Member | null {
   if (m.kind === 'section') {
-    return { kind: SECTION_KIND[m.keyword], name: null, body: m.body, scoped: m.scoped };
+    const idle = /\bidle\b/.test(m.header);
+    return { kind: SECTION_KIND[m.keyword], name: null, body: m.body, scoped: m.scoped, idle };
   }
   if (m.kind === 'signature') return parseSignatureMember(m);
   if (m.kind === 'property') {

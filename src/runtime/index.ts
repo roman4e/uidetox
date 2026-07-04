@@ -2,6 +2,8 @@ export { state } from './state.js';
 export { effect } from './effect.js';
 export { derived } from './derived.js';
 export { defineComponent } from './component.js';
+export { task } from './task.js';
+export type { TaskOptions } from './task.js';
 export {
   CASE_DEFAULT,
   __bind,

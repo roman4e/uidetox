@@ -45,13 +45,14 @@ export function emitComponent(decl: Declaration): string {
   const script = decl.members.find((m) => m.kind === 'script');
   const actions = decl.members.find((m) => m.kind === 'actions');
   const effects = decl.members.find((m) => m.kind === 'effects');
+  const tasks = decl.members.filter((m) => m.kind === 'task');
 
   const templateSource = template?.body ?? '<div/>';
   const ast = transformDirectives(parseTemplate(templateSource));
   const templateBody = codegen(ast);
 
   const bootLines: string[] = [
-    '  const { props, host, refs, ref, find, findAll, effect, emit, registry } = ctx;',
+    '  const { props, host, refs, ref, find, findAll, effect, emit, registry, task } = ctx;',
   ];
   // script — private boot statements
   if (script?.body) bootLines.push(`  ${script.body.trim()}`);
@@ -60,6 +61,11 @@ export function emitComponent(decl: Declaration): string {
   // Build the template first so refs are populated before effects run.
   bootLines.push(`  const __tpl = ${templateBody};`);
   if (effects?.body) bootLines.push(`  ${effects.body.trim()}`);
+  // Detached async tasks — each wrapped in ctx.task (auto-disposed on unmount).
+  for (const t of tasks) {
+    const idle = t.idle ? ', { idle: true }' : '';
+    bootLines.push(`  task(async (signal) => {\n${t.body ?? ''}\n  }${idle});`);
+  }
   // Attach actions to the host as the imperative public API.
   if (actions?.body) {
     for (const name of actionNames(actions.body)) {
