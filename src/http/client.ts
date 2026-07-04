@@ -106,7 +106,11 @@ export function createHttpClient(baseUrl: string, opts: HttpClientOptions = {}):
 
     if (response.status === 401 && retry && opts.auth?.onRefresh) {
       const fresh = await refreshToken();
-      if (fresh) return send(method, path, params, false);
+      if (fresh) {
+        const retried = await send(method, path, params, false);
+        if (retried.status === 401) opts.onAuthExpired?.();
+        return retried;
+      }
       opts.onAuthExpired?.();
     }
     return response;
