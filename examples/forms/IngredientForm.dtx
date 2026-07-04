@@ -1,0 +1,67 @@
+import form, f from "uidetox/forms"
+
+component IngredientForm export tag ingredient-form
+
+props
+object initial
+end props
+
+script
+const schema = f.object({
+  name: f.string().min(2).max(200),
+  densityGml: f.number().positive().optional(),
+  nutrients: f.array(f.object({
+    code: f.string().min(1),
+    amountPer100g: f.number().min(0),
+  })).min(1),
+});
+
+const fm = form({
+  schema,
+  initial: props.initial ?? { name: '', densityGml: undefined, nutrients: [] },
+  onSubmit: async (value) => { console.log('save ingredient', value); },
+});
+
+// Live similarity search on debounced name change.
+fm.watch('name', (name) => { console.log('search similar', name); });
+end script
+
+actions
+function addNutrient() { fm.field('nutrients').append({ code: '', amountPer100g: 0 }); }
+function removeNutrient(i) { fm.field('nutrients').removeAt(i); }
+end actions
+
+template
+<form @submit=${fm.submit}>
+  <label>Назва
+    <input bind=${fm.field('name')} placeholder="Назва"/>
+  </label>
+  <field-error .of=${fm.field('name')}></field-error>
+
+  <label>Густина (г/мл)
+    <input type="number" bind=${fm.field('densityGml')}/>
+  </label>
+
+  <fieldset>
+    <legend>Нутрієнти</legend>
+    <for each=${fm.values.nutrients} item="row" key="index">
+      <div class="nutrient-row">
+        <input bind=${fm.field(`nutrients.${index}.code`)} placeholder="код"/>
+        <input type="number" bind=${fm.field(`nutrients.${index}.amountPer100g`)}/>
+        <button type="button" @click=${() => removeNutrient(index)}>×</button>
+      </div>
+    </for>
+    <field-error .of=${fm.field('nutrients')}></field-error>
+  </fieldset>
+  <button type="button" @click=${addNutrient}>+ нутрієнт</button>
+
+  <button type="submit" ?disabled=${!fm.valid || fm.submitting}>Зберегти</button>
+</form>
+end template
+
+style scoped
+.nutrient-row { display: flex; gap: .5rem; align-items: center; }
+field-error[visible] { color: crimson; font-size: .85rem; }
+end style
+
+end component
