@@ -16,6 +16,7 @@
   "exports": {
     ".": "./dist/runtime/index.js",
     "./forms": "./dist/forms/index.js",
+    "./http": "./dist/http/index.js",
     "./compiler": "./dist/compiler/index.js"
   },
   "dependencies": {
