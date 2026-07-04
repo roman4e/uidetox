@@ -51,7 +51,7 @@ export function emitComponent(decl: Declaration): string {
   const templateBody = codegen(ast);
 
   const bootLines: string[] = [
-    '  const { props, host, refs, ref, find, findAll } = ctx;',
+    '  const { props, host, refs, ref, find, findAll, effect, emit, registry } = ctx;',
   ];
   // script — private boot statements
   if (script?.body) bootLines.push(`  ${script.body.trim()}`);
