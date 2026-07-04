@@ -19,10 +19,36 @@ function track(target: object, key: PropertyKey) {
   byKey.add(observer);
 }
 
+let batchDepth = 0;
+const pending = new Set<Observer>();
+
 export function notify(target: object, key: PropertyKey): void {
   const observers = subs.get(target)?.get(key);
   if (!observers) return;
+  if (batchDepth > 0) {
+    for (const obs of observers) pending.add(obs);
+    return;
+  }
   for (const obs of [...observers]) obs();
+}
+
+/**
+ * Groups mutations so subscribers are notified once, after all writes complete.
+ * Nested batches flatten; the outermost frame owns the flush. Flushes even if
+ * `fn` throws. Reads inside see current (post-write) values.
+ */
+export function batch<T>(fn: () => T): T {
+  batchDepth++;
+  try {
+    return fn();
+  } finally {
+    batchDepth--;
+    if (batchDepth === 0) {
+      const observers = [...pending];
+      pending.clear();
+      for (const obs of observers) obs();
+    }
+  }
 }
 
 export function state<T extends object>(obj: T): T {
@@ -55,5 +81,38 @@ export function state<T extends object>(obj: T): T {
     },
   }) as T;
   proxies.set(obj, proxy);
+  return proxy;
+}
+
+const shallowProxies = new WeakMap<object, object>();
+
+/**
+ * Reactive container that tracks only top-level keys. Nested values are
+ * returned as-is (not re-wrapped), so mutating inside a value does NOT notify —
+ * replace the reference to trigger subscribers. Cheap for large, read-mostly
+ * payloads that are swapped wholesale.
+ */
+export function shallow<T extends object>(obj: T): T {
+  const existing = shallowProxies.get(obj);
+  if (existing) return existing as T;
+  const proxy = new Proxy(obj, {
+    get(target, key, receiver) {
+      track(target, key);
+      return Reflect.get(target, key, receiver);
+    },
+    set(target, key, value, receiver) {
+      const prev = Reflect.get(target, key, receiver);
+      const ok = Reflect.set(target, key, value, receiver);
+      if (ok && !Object.is(prev, value)) notify(target, key);
+      return ok;
+    },
+    deleteProperty(target, key) {
+      const had = key in target;
+      const ok = Reflect.deleteProperty(target, key);
+      if (ok && had) notify(target, key);
+      return ok;
+    },
+  }) as T;
+  shallowProxies.set(obj, proxy);
   return proxy;
 }

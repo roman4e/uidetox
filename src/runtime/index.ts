@@ -1,4 +1,5 @@
-export { state } from './state.js';
+export { state, shallow, batch } from './state.js';
+export { untrack, untracked } from './observer.js';
 export { effect } from './effect.js';
 export { derived } from './derived.js';
 export { defineComponent } from './component.js';

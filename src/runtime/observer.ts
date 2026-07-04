@@ -26,3 +26,6 @@ export function untrack<T>(fn: () => T): T {
     current = prev;
   }
 }
+
+/** Alias of {@link untrack}. */
+export const untracked = untrack;
