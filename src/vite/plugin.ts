@@ -17,6 +17,7 @@ import {
   isVirtualCssId,
   stripInlineStyle,
 } from './css.js';
+import { extractTestBlocks, emitTestExports } from './testblocks.js';
 
 export interface UidetoxPluginOptions {
   /** Project root; defaults to process.cwd(). */
@@ -29,6 +30,8 @@ export interface UidetoxPluginOptions {
   sourceMaps?: boolean;
   /** Extract `style scoped` into Vite's CSS pipeline (virtual imports). Default true. */
   extractCss?: boolean;
+  /** dev/build strip colocated test blocks; test re-emits them as `__tests`. Default 'dev'. */
+  mode?: 'dev' | 'build' | 'test';
 }
 
 /** Shared core used by both the Vite and esbuild plugins. */
@@ -67,6 +70,11 @@ export function createUidetoxCore(opts: UidetoxPluginOptions = {}) {
         cssModules.set(virtualId, css);
         out = `import ${JSON.stringify(virtualId)};\n${stripInlineStyle(out)}`;
       }
+    }
+
+    // Colocated test blocks: re-emit in `test` mode, stay stripped otherwise.
+    if ((opts.mode ?? 'dev') === 'test') {
+      out += emitTestExports(extractTestBlocks(id, code));
     }
     return { code: out, map: opts.sourceMaps === false ? null : compiled.map };
   }
@@ -120,8 +128,9 @@ interface EsbuildBuild {
  * The Vite plugin covers the same ground with richer HMR.
  */
 export function uidetoxEsbuild(opts: UidetoxPluginOptions = {}): { name: string; setup(build: EsbuildBuild): void } {
-  // esbuild/Vitest has no virtual-CSS resolver; keep styles inline unless asked.
-  const core = createUidetoxCore({ extractCss: false, ...opts });
+  // esbuild is the Vitest bridge: keep styles inline (no CSS resolver) and
+  // re-emit colocated test blocks so the runner can execute them.
+  const core = createUidetoxCore({ extractCss: false, mode: 'test', ...opts });
   return {
     name: 'uidetox',
     setup(build) {

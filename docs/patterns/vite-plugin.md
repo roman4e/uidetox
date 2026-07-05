@@ -68,6 +68,29 @@ import { uidetoxEsbuild } from 'uidetox/vite';
 esbuild.build({ plugins: [uidetoxEsbuild()] });
 ```
 
+## Colocated tests
+
+`.md` SFCs may carry `ts test` / `ts test:visual` / `ts test:a11y` / `json
+fixtures` / `ts mock` blocks. dev/build **strip** them (no test code or deps ship
+to production). In `test` mode the plugin re-emits them as
+`export function __tests()` (and `export const __fixtures`), so a runner can
+execute them. The esbuild plugin defaults to `mode: 'test'`.
+
+```ts
+// vitest.config.ts
+import { defineConfig } from 'vitest/config';
+import { uidetoxEsbuild } from 'uidetox/vite';
+
+export default defineConfig({
+  test: { environment: 'happy-dom' },
+  esbuild: false,
+  optimizeDeps: { esbuildOptions: { plugins: [uidetoxEsbuild()] } },
+});
+```
+
+Then import and run a component's tests: `import { __tests } from './Widget.md';
+describe('Widget', __tests)`.
+
 ## TypeScript
 
 `generateTsShim(id, source)` produces virtual `.ts` declarations (the `Props`
