@@ -123,12 +123,13 @@ Thin launchers so a project's `package.json` needs no hand-written config:
 
 Both error with an install hint if the tool isn't present.
 
-## Status vs the request (REQ-08)
+## Status (REQ-08 + REQ-09)
 
-Shipped: `.dtx`/`.md` loading, dotted resolution, duplicate-tag guard, esbuild
-factory, TS shim generation, source-map passthrough (dtx), the
-`examples/culinary-lite/` smoke project.
+Shipped: `.dtx`/`.md` loading, dotted + single-segment resolution, duplicate-tag
+guard, esbuild factory, `router` verb → `RouteEntry[]`, scoped-CSS through Vite's
+pipeline, mode-gated colocated tests, auto-written TS shims (`tsc --noEmit`
+resolves dotted imports), element-interface host-method typing, `.md` source
+maps, `uidetox dev` / `uidetox test` CLI wrappers, the `examples/culinary-lite/`
+smoke project.
 
-Deferred / v1-simplified: HMR is a full route reload (not versioned-tag
-hot-swap); scoped-CSS extraction into Vite's CSS pipeline and the `uidetox dev`
-wrapper are follow-ups. See `examples/culinary-lite/`.
+Still v1-simplified: HMR is a full route reload (not versioned-tag hot-swap).
