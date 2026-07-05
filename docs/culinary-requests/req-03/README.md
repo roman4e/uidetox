@@ -1,0 +1,16 @@
+# Culinary → UIDetox Feature Requests — Batch 03
+
+**Status:** OPEN
+
+Single-item batch — an isolated critical blocker discovered after REQ-02
+was closed. All REQ-08/09/10/11 shipped changes live in `src/` but never
+reach consumers because `pnpm build` fails on pre-existing TypeScript
+errors, leaving `dist/` stale.
+
+## Requests
+
+| # | Request | Priority |
+|---|---|---|
+| 13 | Unblock `pnpm build` — REQ-10/11 fixes unreachable via `link:.../dist` | **P0** |
+
+See `req-13-unblock-build.md`.

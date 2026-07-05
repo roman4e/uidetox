@@ -5,7 +5,8 @@ let registered = false;
 
 async function resolveHandler(handler: Handler): Promise<Exclude<Handler, LazyHandler>> {
   if (typeof handler === 'function') return handler;
-  return handler.load();
+  // A lazy handler may resolve to another lazy handler — unwrap recursively.
+  return resolveHandler(await handler.load());
 }
 
 export function registerOutlet(): void {

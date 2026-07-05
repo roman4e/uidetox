@@ -38,7 +38,7 @@ function merge<T>(sequences: T[][]): T[] {
 }
 
 export function resolveLinearization<T extends Linearizable<T>>(root: T): T[] {
-  const cached = (root as { [k: symbol]: T[] })[CACHE];
+  const cached = (root as unknown as Record<symbol, T[]>)[CACHE];
   if (cached) return cached;
   const parents = root.extends ?? [];
   const parentLins = parents.map((p) => resolveLinearization(p));
