@@ -33,3 +33,21 @@ hrefs — so new-tab and external links work as usual.
 
 `installNavLinks()` is called automatically by `router.start()`; call it
 manually only if you navigate before starting a router.
+
+## Reactive route state
+
+`routeState()` returns the active router's reactive `{ path, params, meta }`.
+Read its fields in an effect to react to navigation — e.g. a `KitchenMode`
+island starting/stopping work as it becomes active:
+
+```ts
+import { routeState } from 'uidetox';
+
+ctx.effect(() => {
+  const active = routeState().path === '/kitchen/:id';
+  if (active) startTimer(); else stopTimer();
+});
+```
+
+Also available directly on the instance as `router.state`. `meta.layout` (from
+the router DSL `layout=` clause) rides along here too.

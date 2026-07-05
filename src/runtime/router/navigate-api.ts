@@ -1,11 +1,28 @@
 import type { NavigateController } from './navigate.js';
 
 let active: NavigateController | null = null;
+let activeState: unknown = null;
 let navLinksInstalled = false;
 
 /** Registers the controller used by the module-level `navigate()`. Set on router start. */
 export function setActiveController(controller: NavigateController | null): void {
   active = controller;
+}
+
+/** Registers the reactive route-state store exposed by `routeState()`. */
+export function setActiveRouteState(routeState: unknown): void {
+  activeState = routeState;
+}
+
+/**
+ * The active router's reactive route state — `{ path, params, meta }`. Read its
+ * fields inside an effect to react to navigation (e.g. start/stop per-route work).
+ */
+export function routeState<T = { path: string; params: Record<string, unknown>; meta: Record<string, unknown> }>(): T {
+  if (!activeState) {
+    throw new Error('routeState(): no router is active. Call router.start() first.');
+  }
+  return activeState as T;
 }
 
 /** Client-side navigation to `url` via the active router (SPA transition, no reload). */

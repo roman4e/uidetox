@@ -1,7 +1,8 @@
 import { runGuards } from './guards.js';
 import { matchPath, specificity } from './match.js';
 import { createController, type NavigateController } from './navigate.js';
-import { setActiveController, installNavLinks } from './navigate-api.js';
+import { setActiveController, installNavLinks, setActiveRouteState } from './navigate-api.js';
+import { state } from '../state.js';
 import { applyParams } from './params.js';
 import { applySlashPolicy, type SlashPolicy } from './slashPolicy.js';
 import type {
@@ -23,10 +24,18 @@ export interface MatchedRoute {
   location: Location;
 }
 
+export interface RouteState {
+  path: string;
+  params: Record<string, ParamValue>;
+  meta: Record<string, unknown>;
+}
+
 export interface RouterInstance {
   start(): void;
   stop(): void;
   controller: NavigateController;
+  /** Reactive current-match state; read `.path`/`.params`/`.meta` in an effect. */
+  state: RouteState;
   onMatched(fn: (m: MatchedRoute) => void): () => void;
 }
 
@@ -47,6 +56,11 @@ export function defineRouter(config: RouterConfig): RouterInstance {
   const slashPolicy = config.slashPolicy ?? 'strict';
   const controller = createController(mode);
   const listeners = new Set<(m: MatchedRoute) => void>();
+  const routeStateStore = state<{ path: string; params: Record<string, ParamValue>; meta: Record<string, unknown> }>({
+    path: '',
+    params: {},
+    meta: {},
+  });
 
   const tryOne = (
     u: string,
@@ -93,6 +107,11 @@ export function defineRouter(config: RouterConfig): RouterInstance {
       return;
     }
 
+    // Reactive route state (§11.11): components subscribe via effect.
+    routeStateStore.path = matchedEntry.path;
+    routeStateStore.params = matchedParams;
+    routeStateStore.meta = matchedEntry.meta;
+
     const notified: MatchedRoute = { entry: matchedEntry, params: matchedParams, location };
     for (const fn of [...listeners]) fn(notified);
   }
@@ -101,12 +120,14 @@ export function defineRouter(config: RouterConfig): RouterInstance {
 
   return {
     controller,
+    state: routeStateStore,
     onMatched(fn) {
       listeners.add(fn);
       return () => listeners.delete(fn);
     },
     start() {
       setActiveController(controller);
+      setActiveRouteState(routeStateStore);
       installNavLinks();
       unsub = controller.onChange(tryMatch);
       void tryMatch(controller.current());
@@ -115,6 +136,7 @@ export function defineRouter(config: RouterConfig): RouterInstance {
       unsub?.();
       unsub = null;
       setActiveController(null);
+      setActiveRouteState(null);
     },
   };
 }
