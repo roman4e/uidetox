@@ -50,7 +50,7 @@ export async function runBuild(options: BuildOptions): Promise<void> {
   }
 }
 
-const program = new Command();
+export const program = new Command();
 program
   .name('uidetox')
   .command('build <inputDir>')
@@ -65,6 +65,21 @@ program
   .requiredOption('-o, --output <file>', 'Output TypeScript client file')
   .action(async (opts: { input: string; output: string }) => {
     await runOpenApi({ input: opts.input, output: opts.output });
+  });
+
+program
+  .command('dev')
+  .option('-p, --port <port>', 'Dev server port')
+  .action(async (opts: { port?: string }) => {
+    const { runDev } = await import('./dev.js');
+    await runDev({ port: opts.port ? Number(opts.port) : undefined });
+  });
+
+program
+  .command('test')
+  .action(async () => {
+    const { runTest } = await import('./dev.js');
+    await runTest();
   });
 
 if (process.argv[1]?.endsWith('build.ts') || process.argv[1]?.endsWith('build.js')) {

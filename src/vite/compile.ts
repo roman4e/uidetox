@@ -1,5 +1,6 @@
 import { compile } from '../compiler/compile.js';
 import { compileDtx } from '../compiler/dtx/index.js';
+import { buildLineMap } from './sourcemap.js';
 
 export interface CompiledModule {
   code: string;
@@ -25,7 +26,8 @@ export function compileModule(id: string, source: string): CompiledModule {
   }
   if (id.endsWith('.md')) {
     const { js, tag } = compile(source);
-    return { code: js, map: null, tag };
+    // The Markdown compiler has no source map; anchor generated lines to the .md.
+    return { code: js, map: JSON.stringify(buildLineMap(id, source, js)), tag };
   }
   throw new Error(`uidetox: cannot compile ${id} (expected .dtx or .md)`);
 }

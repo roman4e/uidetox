@@ -109,6 +109,20 @@ import Login from 'pages.Login';   // ✅ typed: (props?: Props) => HTMLElement
 
 Run the plugin once (dev or build) to (re)generate the file.
 
+## CLI wrappers
+
+Thin launchers so a project's `package.json` needs no hand-written config:
+
+```json
+{ "scripts": { "dev": "uidetox dev", "test": "uidetox test", "build": "uidetox build" } }
+```
+
+- `uidetox dev` — starts Vite with `uidetox()` pre-registered (needs `vite`).
+- `uidetox test` — runs Vitest under happy-dom with `uidetoxEsbuild()` in
+  `mode: 'test'` (needs `vitest`).
+
+Both error with an install hint if the tool isn't present.
+
 ## Status vs the request (REQ-08)
 
 Shipped: `.dtx`/`.md` loading, dotted resolution, duplicate-tag guard, esbuild
