@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # `pnpm build` runs `tsc -p tsconfig.json`. A type error here fails CI so
+      # dist/ can never be silently stranded for linked consumers (REQ-13).
+      - run: pnpm build
+      - run: pnpm test
