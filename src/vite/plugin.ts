@@ -18,6 +18,7 @@ import {
   stripInlineStyle,
 } from './css.js';
 import { extractTestBlocks, emitTestExports } from './testblocks.js';
+import { writeShims } from './shims.js';
 
 export interface UidetoxPluginOptions {
   /** Project root; defaults to process.cwd(). */
@@ -45,12 +46,17 @@ export function createUidetoxCore(opts: UidetoxPluginOptions = {}) {
   /** Extracted virtual CSS, keyed by `virtual:uidetox-css/<hash>.css`. */
   const cssModules = new Map<string, string>();
 
-  /** Maps a dotted specifier to an absolute file path (throws on miss). Null if not dotted. */
+  /**
+   * Resolves a bare module ref (dotted `pages.Login` or single `routes`) to a
+   * file. Slashed/relative specifiers are left to Vite/npm. A miss on a clearly
+   * dotted (multi-segment) ref throws; a single-segment miss falls through to npm.
+   */
   function resolveSpecifier(id: string): string | null {
-    if (!isDottedSpecifier(id)) return null;
+    if (id.includes('/') || id.startsWith('.') || !/^[A-Za-z][\w.-]*$/.test(id)) return null;
     const result = resolveDottedModule(id, config, configRoot);
-    if (!result.path) throw dottedMissError(id, result, configPath);
-    return result.path;
+    if (result.path) return result.path;
+    if (isDottedSpecifier(id)) throw dottedMissError(id, result, configPath);
+    return null; // single-segment miss → npm/bare specifier
   }
 
   /** Compiles a `.dtx`/`.md` source, enforcing unique tags. Null if not a component source. */
@@ -82,6 +88,8 @@ export function createUidetoxCore(opts: UidetoxPluginOptions = {}) {
   return {
     root, configPath, configRoot, config, tags, resolveSpecifier, transform,
     getCss: (id: string) => cssModules.get(id.replace(/^\0/, '')),
+    /** Writes <root>/.uidetox/dtx-shims.d.ts for `tsc --noEmit`. Returns the path. */
+    writeShims: () => writeShims(root, config, configRoot),
   };
 }
 
@@ -95,6 +103,10 @@ export function uidetox(opts: UidetoxPluginOptions = {}): Record<string, unknown
   return {
     name: 'uidetox',
     enforce: 'pre',
+    buildStart() {
+      // Emit ambient TS shims so `tsc --noEmit` resolves dotted imports.
+      try { core.writeShims(); } catch { /* non-fatal */ }
+    },
     resolveId(id: string): string | null {
       // Virtual CSS ids are returned with a leading \0 so Vite treats them as virtual.
       if (isVirtualCssId(id)) return id.startsWith('\0') ? id : '\0' + id;

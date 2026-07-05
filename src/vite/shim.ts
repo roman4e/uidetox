@@ -37,7 +37,7 @@ function dtxPropsType(source: string): string | null {
 }
 
 /** Returns TypeScript declarations for the component in `source` (id decides format). */
-export function generateTsShim(id: string, source: string): string {
+export function generateTsShim(id: string, source: string, opts: { ambient?: boolean } = {}): string {
   let propsDecl: string;
   if (id.endsWith('.md')) {
     const t = mdPropsType(source);
@@ -45,10 +45,12 @@ export function generateTsShim(id: string, source: string): string {
   } else {
     propsDecl = dtxPropsType(source) ?? 'export type Props = Record<string, unknown>;';
   }
+  // In an ambient `declare module { … }` block, `const` is already ambient.
+  const constKw = opts.ambient ? 'const' : 'declare const';
   return [
     '// AUTO-GENERATED shim for a UIDetox component. Do not edit.',
     propsDecl.startsWith('export') ? propsDecl : `export ${propsDecl}`,
-    'declare const _default: (props?: Props) => HTMLElement;',
+    `${constKw} _default: (props?: Props) => HTMLElement;`,
     'export default _default;',
     '',
   ].join('\n');

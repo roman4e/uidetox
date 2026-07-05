@@ -93,9 +93,21 @@ describe('Widget', __tests)`.
 
 ## TypeScript
 
-`generateTsShim(id, source)` produces virtual `.ts` declarations (the `Props`
-type + a default-export signature) so `tsc --noEmit` type-checks `.dtx`/`.md`
-imports.
+On `buildStart` the plugin writes `<root>/.uidetox/dtx-shims.d.ts` — ambient
+`declare module` blocks for every dotted spec under the include roots, each with
+its `Props` type and default-export signature. Add it to your tsconfig so
+`tsc --noEmit` resolves dotted imports:
+
+```jsonc
+// tsconfig.json
+{ "include": ["src", ".uidetox/dtx-shims.d.ts"] }
+```
+
+```ts
+import Login from 'pages.Login';   // ✅ typed: (props?: Props) => HTMLElement
+```
+
+Run the plugin once (dev or build) to (re)generate the file.
 
 ## Status vs the request (REQ-08)
 
