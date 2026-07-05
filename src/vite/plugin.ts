@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, isAbsolute, join } from 'node:path';
 import { loadConfig } from '../compiler/dtx/resolve.js';
 import { compileModule, isComponentSource } from './compile.js';
 import { createTagRegistry } from './tags.js';
@@ -67,7 +67,10 @@ export function createUidetoxCore(opts: UidetoxPluginOptions = {}) {
   /** Compiles a `.dtx`/`.md` source, enforcing unique tags. Null if not a component source. */
   function transform(code: string, id: string): { code: string; map: string | null } | null {
     if (!isComponentSource(id)) return null;
-    const compiled = compileModule(id, code);
+    const compiled = compileModule(id, code, {
+      includes: config.resolve.includes.map((inc) => (isAbsolute(inc) ? inc : join(configRoot, inc))),
+      extensions: config.resolve.extensions,
+    });
     tags.register(compiled.tag, id);
     let out = compiled.code;
 

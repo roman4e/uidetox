@@ -20,8 +20,8 @@ describe('culinary-lite example project', () => {
   });
 
   it('compiles both page components with unique tags', () => {
-    const login = core.transform(readFileSync(join(projectRoot, 'src/pages/Login.dtx'), 'utf8'), 'Login.dtx');
-    const dash = core.transform(readFileSync(join(projectRoot, 'src/pages/Dashboard.dtx'), 'utf8'), 'Dashboard.dtx');
+    const login = core.transform(readFileSync(join(projectRoot, 'src/pages/Login.dtx'), 'utf8'), join(projectRoot, 'src/pages/Login.dtx'));
+    const dash = core.transform(readFileSync(join(projectRoot, 'src/pages/Dashboard.dtx'), 'utf8'), join(projectRoot, 'src/pages/Dashboard.dtx'));
     expect(login?.code).toContain('defineComponent');
     expect(login?.code).toContain('tag: "app-login"');
     expect(dash?.code).toContain('tag: "app-dashboard"');
@@ -32,7 +32,7 @@ describe('culinary-lite example project', () => {
   });
 
   it('compiles routes.dtx (groups, layout/guard, params, catch-all) to RouteEntry[]', () => {
-    const out = core.transform(readFileSync(join(projectRoot, 'src/routes.dtx'), 'utf8'), 'routes.dtx');
+    const out = core.transform(readFileSync(join(projectRoot, 'src/routes.dtx'), 'utf8'), join(projectRoot, 'src/routes.dtx'));
     expect(out?.code).toContain('export default [');
     expect(out?.code).toContain('path: "/login", handler: Login');
     expect(out?.code).toMatch(/path: "\/", handler: Dashboard[\s\S]*?guards: \[requireAuth\][\s\S]*?meta: \{ layout: AppShell \}/);

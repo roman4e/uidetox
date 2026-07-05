@@ -26,9 +26,16 @@ describe('dtx import syntax', () => {
     expect(code).toContain('import { form, f } from "uidetox/forms";');
   });
 
-  it('side-effect import (no from) resolves the name', () => {
-    const { code } = compileDtx('import my-widget\n');
-    expect(code).toContain('import "./my-widget.js";');
+  it('side-effect import of a dotted local ref resolves to a compiled path', () => {
+    const { code } = compileDtx('import widgets.my-widget\n');
+    expect(code).toContain('import "./widgets/my-widget.js";');
+  });
+
+  it('leaves a bare npm specifier verbatim (REQ-14.1)', () => {
+    const { code } = compileDtx('import registry from "uidetox"\nimport authToken from "tokens"\n');
+    expect(code).toContain('import { registry } from "uidetox";');   // bare npm, not ./uidetox.js
+    // `tokens` has no on-disk match without baseDir → treated as bare (bundler resolves)
+    expect(code).toContain('import { authToken } from "tokens";');
   });
 
   it('emits all strings in double quotes', () => {
@@ -55,9 +62,23 @@ describe('resolveSpecifier (filesystem, Python-style)', () => {
     expect(resolveSpecifier('foo', { baseDir: root })).toBe('./foo.js');
     expect(resolveSpecifier('bar', { baseDir: root })).toBe('./bar/module.js');
     expect(resolveSpecifier('shared', { baseDir: root, includes: [inc] })).toContain('.js');
-    // not found anywhere → direct fallback
-    expect(resolveSpecifier('missing', { baseDir: root })).toBe('./missing.js');
+    // not found + single segment → bare npm specifier, verbatim
+    expect(resolveSpecifier('missing', { baseDir: root })).toBe('missing');
     // npm/explicit passthrough
     expect(resolveSpecifier('uidetox/forms', { baseDir: root })).toBe('uidetox/forms');
+  });
+
+  it('leaves bare npm specifiers verbatim; resolves .ts via extensions (REQ-14)', () => {
+    const root = mkdtempSync(join(tmpdir(), 'dtx-res-'));
+    mkdirSync(join(root, 'nested'), { recursive: true });
+    writeFileSync(join(root, 'tokens.ts'), '');
+    // bare npm specifiers — never rewritten to relative
+    expect(resolveSpecifier('uidetox')).toBe('uidetox');
+    expect(resolveSpecifier('lodash-es')).toBe('lodash-es');
+    expect(resolveSpecifier('uidetox/forms')).toBe('uidetox/forms');
+    expect(resolveSpecifier('./sibling.js')).toBe('./sibling.js');
+    // a local .ts, found via extensions → project-relative, extension dropped
+    const fromNested = resolveSpecifier('tokens', { baseDir: join(root, 'nested'), includes: [root], extensions: ['.dtx', '.ts'] });
+    expect(fromNested).toBe('../tokens');
   });
 });

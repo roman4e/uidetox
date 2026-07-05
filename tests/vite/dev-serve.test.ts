@@ -39,6 +39,29 @@ describe('Bug 10.1 — load hook makes dev serve compile .dtx', () => {
   });
 });
 
+describe('REQ-14 — user imports resolve (bare npm verbatim, local .ts relative)', () => {
+  it('threads baseDir so uidetox stays bare and local .ts becomes project-relative', () => {
+    const root = mkdtempSync(join(tmpdir(), 'dtx-imp-'));
+    writeFileSync(join(root, 'detox.toml'), 'resolve.includes = ["src"]\nresolve.extensions = [".dtx", ".md", ".ts"]\n');
+    mkdirSync(join(root, 'src', 'pages'), { recursive: true });
+    writeFileSync(join(root, 'src', 'tokens.ts'), 'export const authToken = 1;');
+    const login = join(root, 'src', 'pages', 'Login.dtx');
+    writeFileSync(login,
+      'import registry from "uidetox"\n' +
+      'import form, f from "uidetox/forms"\n' +
+      'import authToken from "tokens"\n' +
+      'component LoginPage tag login-page\ntemplate\n<div/>\nend template\nend component\n');
+
+    const p = uidetox({ root });
+    const src = (p.load as (id: string) => string | null)(login)!;
+    const out = (p.transform as (c: string, id: string) => { code: string } | null)(src, login);
+    expect(out?.code).toContain('import { registry } from "uidetox";');        // bare npm, NOT ./uidetox.js
+    expect(out?.code).toContain('import { form, f } from "uidetox/forms";');    // scoped subpath verbatim
+    expect(out?.code).toContain('import { authToken } from "../tokens";');      // local .ts, project-relative
+    expect(out?.code).not.toContain('./uidetox.js');
+  });
+});
+
 describe('Bug 10.2 — esbuild resolves bare + dotted specifiers during scan', () => {
   it('onResolve maps dotted and single-segment refs, passes npm through', () => {
     const { root } = project();

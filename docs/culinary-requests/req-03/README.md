@@ -12,5 +12,6 @@ errors, leaving `dist/` stale.
 | # | Request | Priority |
 |---|---|---|
 | 13 | Unblock `pnpm build` — REQ-10/11 fixes unreachable via `link:.../dist` | **P0** |
+| 14 | DTX import resolver rewrites bare npm specifiers as broken relative paths | **P0** — every `.dtx` file 500s |
 
 See `req-13-unblock-build.md`.

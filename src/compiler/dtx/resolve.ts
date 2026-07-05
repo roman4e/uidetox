@@ -64,12 +64,17 @@ export interface SpecifierOptions {
   baseDir?: string;
   /** Extra roots searched Python-style when the module is not found beside the importer. */
   includes?: string[];
+  /** File extensions to search (default `['.dtx']`). `.dtx`/`.md` compile to `.js`. */
+  extensions?: string[];
 }
 
 function toRelative(baseDir: string, target: string): string {
   let rel = relative(baseDir, target).replace(/\\/g, '/');
   if (!rel.startsWith('.')) rel = './' + rel;
-  return rel.replace(/\.dtx$/, '.js');
+  // Compiled component sources become `.js`; TS/JS modules drop the extension so
+  // the bundler resolves them (`../tokens.ts` → `../tokens`).
+  if (/\.(dtx|md)$/.test(rel)) return rel.replace(/\.(dtx|md)$/, '.js');
+  return rel.replace(/\.(ts|tsx|js|mjs|cjs)$/, '');
 }
 
 /**
@@ -77,21 +82,29 @@ function toRelative(baseDir: string, target: string): string {
  *
  * - A specifier containing `/` is a bare/npm or explicit path — returned verbatim.
  * - Otherwise dots become path separators (`a.b` → `a/b`) and the module is looked
- *   up as `<slash>.dtx`, then the package form `<slash>/module.dtx`, first beside
- *   the importer (`baseDir`) then in each `includes` root (like Python's sys.path).
- * - With no `baseDir` (or nothing found) it falls back to the direct `./<slash>.js` form.
+ *   up as `<slash><ext>`, then the package form `<slash>/module<ext>`, over every
+ *   configured extension, first beside the importer (`baseDir`) then in each
+ *   `includes` root (like Python's sys.path).
+ * - A single-segment ref that matches nothing is a bare npm specifier → verbatim.
+ * - A dotted ref that matches nothing falls back to `./<slash>.js`.
  */
 export function resolveSpecifier(spec: string, opts: SpecifierOptions = {}): string {
   if (spec.includes('/')) return spec;
   const slash = spec.replace(/\./g, '/');
+  const exts = opts.extensions?.length ? opts.extensions : ['.dtx'];
   if (opts.baseDir) {
     const roots = [opts.baseDir, ...(opts.includes ?? [])];
     for (const root of roots) {
-      const direct = join(root, `${slash}.dtx`);
-      if (existsSync(direct)) return toRelative(opts.baseDir, direct);
-      const pkg = join(root, slash, 'module.dtx');
-      if (existsSync(pkg)) return toRelative(opts.baseDir, pkg);
+      for (const ext of exts) {
+        const direct = join(root, `${slash}${ext}`);
+        if (existsSync(direct)) return toRelative(opts.baseDir, direct);
+        const pkg = join(root, slash, `module${ext}`);
+        if (existsSync(pkg)) return toRelative(opts.baseDir, pkg);
+      }
     }
   }
+  // Nothing matched on disk. A bare single-segment id → npm specifier (verbatim);
+  // a dotted ref → best-effort compiled-relative path.
+  if (!spec.includes('.')) return spec;
   return `./${slash}.js`;
 }
