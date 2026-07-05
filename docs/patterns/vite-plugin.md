@@ -44,6 +44,20 @@ import Login from 'pages.Login';        // → src/pages/Login.dtx
 import Dashboard from 'pages.Dashboard';
 ```
 
+## Scoped CSS through Vite's pipeline
+
+By default (`extractCss: true`) each `style [scoped]` body is pulled out of the
+component and imported as a virtual CSS module
+(`import "virtual:uidetox-css/<hash>.css"`), so Vite runs PostCSS / `@import` /
+CSS-HMR on it and bundles it into `dist/assets/*.css` for production.
+
+- `scoped` selectors are prefixed with the component tag (`.btn` →
+  `app-login .btn`). `:root` and at-rules (`@media`, `@keyframes`) stay global,
+  so `var(--fg)` still inherits from the app's `:root`.
+- Non-scoped `style` is emitted global, as-is.
+- Set `extractCss: false` to keep the old behavior (raw `<style>` under the
+  element). The esbuild plugin defaults to `false` (Vitest has no CSS resolver).
+
 ## Non-Vite toolchains
 
 `uidetoxEsbuild()` is an esbuild plugin factory (`onResolve` + `onLoad`) for

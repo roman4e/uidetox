@@ -9,6 +9,14 @@ import {
   dottedMissError,
 } from './resolve.js';
 import { generateTsShim } from './shim.js';
+import {
+  extractStyleSource,
+  scopeCss,
+  cssHash,
+  virtualCssId,
+  isVirtualCssId,
+  stripInlineStyle,
+} from './css.js';
 
 export interface UidetoxPluginOptions {
   /** Project root; defaults to process.cwd(). */
@@ -19,6 +27,8 @@ export interface UidetoxPluginOptions {
   hmr?: boolean;
   /** Emit source maps. Default true. */
   sourceMaps?: boolean;
+  /** Extract `style scoped` into Vite's CSS pipeline (virtual imports). Default true. */
+  extractCss?: boolean;
 }
 
 /** Shared core used by both the Vite and esbuild plugins. */
@@ -28,6 +38,9 @@ export function createUidetoxCore(opts: UidetoxPluginOptions = {}) {
   const configRoot = dirname(configPath);
   const config = loadConfig(configRoot);
   const tags = createTagRegistry();
+  const extractCss = opts.extractCss !== false;
+  /** Extracted virtual CSS, keyed by `virtual:uidetox-css/<hash>.css`. */
+  const cssModules = new Map<string, string>();
 
   /** Maps a dotted specifier to an absolute file path (throws on miss). Null if not dotted. */
   function resolveSpecifier(id: string): string | null {
@@ -42,10 +55,26 @@ export function createUidetoxCore(opts: UidetoxPluginOptions = {}) {
     if (!isComponentSource(id)) return null;
     const compiled = compileModule(id, code);
     tags.register(compiled.tag, id);
-    return { code: compiled.code, map: opts.sourceMaps === false ? null : compiled.map };
+    let out = compiled.code;
+
+    // Route `style [scoped]` through Vite's CSS pipeline via a virtual import.
+    if (extractCss && compiled.tag) {
+      const style = extractStyleSource(id, code);
+      if (style && style.css) {
+        const css = style.scoped ? scopeCss(style.css, compiled.tag) : style.css;
+        const hash = cssHash(id, css);
+        const virtualId = virtualCssId(hash);
+        cssModules.set(virtualId, css);
+        out = `import ${JSON.stringify(virtualId)};\n${stripInlineStyle(out)}`;
+      }
+    }
+    return { code: out, map: opts.sourceMaps === false ? null : compiled.map };
   }
 
-  return { root, configPath, configRoot, config, tags, resolveSpecifier, transform };
+  return {
+    root, configPath, configRoot, config, tags, resolveSpecifier, transform,
+    getCss: (id: string) => cssModules.get(id.replace(/^\0/, '')),
+  };
 }
 
 /**
@@ -59,7 +88,13 @@ export function uidetox(opts: UidetoxPluginOptions = {}): Record<string, unknown
     name: 'uidetox',
     enforce: 'pre',
     resolveId(id: string): string | null {
+      // Virtual CSS ids are returned with a leading \0 so Vite treats them as virtual.
+      if (isVirtualCssId(id)) return id.startsWith('\0') ? id : '\0' + id;
       return core.resolveSpecifier(id);
+    },
+    load(id: string): string | null {
+      if (isVirtualCssId(id)) return core.getCss(id) ?? null;
+      return null;
     },
     transform(code: string, id: string) {
       return core.transform(code, id);
@@ -85,7 +120,8 @@ interface EsbuildBuild {
  * The Vite plugin covers the same ground with richer HMR.
  */
 export function uidetoxEsbuild(opts: UidetoxPluginOptions = {}): { name: string; setup(build: EsbuildBuild): void } {
-  const core = createUidetoxCore(opts);
+  // esbuild/Vitest has no virtual-CSS resolver; keep styles inline unless asked.
+  const core = createUidetoxCore({ extractCss: false, ...opts });
   return {
     name: 'uidetox',
     setup(build) {
