@@ -18,6 +18,29 @@ describe('typeOf', () => {
     // FastAPI separate_input_output_schemas hyphenated names → valid TS identifiers
     expect(typeOf({ $ref: '#/components/schemas/NutrientAmount-Input' })).toBe('NutrientAmountInput');
   });
+});
+
+describe('method name derivation (§11.6)', () => {
+  const doc = {
+    paths: {
+      '/v1/auth/login': {
+        post: { operationId: 'login_v1_auth_login_post', tags: ['auth'], responses: {} },
+      },
+      '/v1/me': {
+        get: { operationId: 'read_me_v1_me_get', summary: 'Get Current User', tags: ['auth'], responses: {} },
+      },
+    },
+  };
+  const code = generateApiClient(doc);
+
+  it('strips the FastAPI _v<n>_ suffix from operationId', () => {
+    expect(code).toContain('login(');
+    expect(code).not.toContain('loginV1AuthLoginPost');
+  });
+
+  it('prefers a summary when present', () => {
+    expect(code).toContain('getCurrentUser(');
+  });
 
   it('handles nullable via type array', () => {
     expect(typeOf({ type: ['string', 'null'] })).toBe('string | null');

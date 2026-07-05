@@ -10,6 +10,7 @@ type PathItem = Record<string, Operation>;
 
 interface Operation {
   operationId?: string;
+  summary?: string;
   tags?: string[];
   parameters?: Parameter[];
   requestBody?: {
@@ -162,7 +163,12 @@ function buildMethod(path: string, method: string, op: Operation): MethodGen {
 
   const paramsType = members.length ? `{ ${members.join('; ')} }` : '{}';
   const tag = camel(op.tags?.[0] ?? 'default');
-  const name = camel(op.operationId ?? `${method}_${path}`);
+  // Prefer a human `summary`; else strip FastAPI's `_v<n>_<path>_<verb>` suffix
+  // from the operationId (`login_v1_auth_login_post` → `login`).
+  const rawName = op.summary?.trim()
+    ? op.summary
+    : (op.operationId ? op.operationId.replace(/_v\d+_.*$/, '') : `${method}_${path}`);
+  const name = camel(rawName);
 
   return {
     tag,
