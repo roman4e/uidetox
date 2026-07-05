@@ -45,6 +45,7 @@ export type {
   RouteEntry,
 } from './router/types.js';
 export { defineRouter } from './router/define.js';
+export { navigate, installNavLinks } from './router/navigate-api.js';
 export type { MatchedRoute, RouterInstance } from './router/define.js';
 export { registerOutlet } from './router/outlet.js';
 

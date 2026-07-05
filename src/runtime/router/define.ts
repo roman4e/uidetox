@@ -1,6 +1,7 @@
 import { runGuards } from './guards.js';
 import { matchPath, specificity } from './match.js';
 import { createController, type NavigateController } from './navigate.js';
+import { setActiveController, installNavLinks } from './navigate-api.js';
 import { applyParams } from './params.js';
 import { applySlashPolicy, type SlashPolicy } from './slashPolicy.js';
 import type {
@@ -105,12 +106,15 @@ export function defineRouter(config: RouterConfig): RouterInstance {
       return () => listeners.delete(fn);
     },
     start() {
+      setActiveController(controller);
+      installNavLinks();
       unsub = controller.onChange(tryMatch);
       void tryMatch(controller.current());
     },
     stop() {
       unsub?.();
       unsub = null;
+      setActiveController(null);
     },
   };
 }
