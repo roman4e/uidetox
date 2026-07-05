@@ -5,6 +5,6 @@ export { uidetox, uidetoxEsbuild, createUidetoxCore } from './plugin.js';
 export type { UidetoxPluginOptions } from './plugin.js';
 export { compileModule, isComponentSource } from './compile.js';
 export { isDottedSpecifier, resolveDottedModule } from './resolve.js';
-export { generateTsShim } from './shim.js';
+export { generateTsShim, generateElementInterface } from './shim.js';
 export { collectShimEntries, buildShimsFile, writeShims } from './shims.js';
 export { createTagRegistry } from './tags.js';

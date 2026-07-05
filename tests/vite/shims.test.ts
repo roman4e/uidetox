@@ -2,7 +2,29 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { collectShimEntries, buildShimsFile } from '../../src/vite/shims.js';
+import { generateElementInterface } from '../../src/vite/shim.js';
 import { createUidetoxCore } from '../../src/vite/plugin.js';
+
+describe('generateElementInterface', () => {
+  it('exposes actions as host methods on the element interface + tag map', () => {
+    const src = `component Counter tag app-counter
+actions
+function inc() {}
+function dec() {}
+end actions
+template
+<div/>
+end template
+end component
+`;
+    const el = generateElementInterface('/x/Counter.dtx', src)!;
+    expect(el.name).toBe('AppCounterElement');
+    expect(el.decl).toContain('inc(...args: unknown[]): unknown;');
+    expect(el.decl).toContain('dec(...args: unknown[]): unknown;');
+    expect(el.decl).toContain('interface HTMLElementTagNameMap');
+    expect(el.decl).toContain('"app-counter": AppCounterElement;');
+  });
+});
 
 const projectRoot = resolve(process.cwd(), 'examples/culinary-lite');
 const config = { resolve: { includes: ['src'], extensions: ['.dtx', '.md'] }, build: {} };
