@@ -10,7 +10,7 @@ describe('generateElementInterface', () => {
     const src = `component Counter tag app-counter
 actions
 function inc() {}
-function dec() {}
+function selectNode(id: string): void {}
 end actions
 template
 <div/>
@@ -19,8 +19,8 @@ end component
 `;
     const el = generateElementInterface('/x/Counter.dtx', src)!;
     expect(el.name).toBe('AppCounterElement');
-    expect(el.decl).toContain('inc(...args: unknown[]): unknown;');
-    expect(el.decl).toContain('dec(...args: unknown[]): unknown;');
+    expect(el.decl).toContain('inc(): unknown;');                       // unannotated → unknown return
+    expect(el.decl).toContain('selectNode(id: string): void;');         // §11.4 annotations preserved
     expect(el.decl).toContain('interface HTMLElementTagNameMap');
     expect(el.decl).toContain('"app-counter": AppCounterElement;');
   });

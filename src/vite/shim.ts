@@ -25,15 +25,38 @@ function dtxPropsType(source: string): string | null {
   if (start === -1) return null;
   const fields: string[] = [];
   for (let i = start + 1; i < lines.length; i++) {
-    const first = lines[i].trim().split(/\s+/)[0];
-    if (first === '' ) continue;
+    const trimmed = lines[i].trim();
+    const first = trimmed.split(/\s+/)[0];
+    if (first === '') continue;
     if (DTX_SECTION_KEYWORDS.has(first)) break;
-    const [type, name] = lines[i].trim().split(/\s+/);
+    const tokens = trimmed.split(/\s+/);
+    // `<type>[?] <name> [default …]` — type is one token (no internal spaces),
+    // e.g. `number`, `boolean?`, `"a"|"b"`, `Node[]`.
+    let type = tokens[0];
+    const optional = type.endsWith('?');
+    if (optional) type = type.slice(0, -1);
+    const name = tokens[1];
     if (!name) continue;
-    fields.push(`  ${name}?: ${DTX_TYPE[type] ?? 'unknown'};`);
+    // Known dtx keyword → TS; otherwise pass through verbatim (union / named type).
+    const ts = DTX_TYPE[type] ?? type;
+    fields.push(`  ${name}?: ${ts};`);
   }
   if (!fields.length) return `export type Props = Record<string, never>;`;
   return `export type Props = {\n${fields.join('\n')}\n};`;
+}
+
+/** Collects top-level `import`/`import type` lines from a `.dtx` (for named prop types). */
+function dtxImports(source: string): string[] {
+  const out: string[] = [];
+  for (const line of source.split('\n')) {
+    const t = line.trim();
+    if (/^import\s+type\s/.test(t) || /^import\s+\{/.test(t)) out.push(t);
+    else if (t && !/^import\b/.test(t) && !/^\/\//.test(t)) {
+      // Stop at the first non-import, non-comment, non-blank line (declarations start).
+      if (/^(component|trait|filter|token|provide|router)\b/.test(t)) break;
+    }
+  }
+  return out;
 }
 
 function pascal(tag: string): string {
@@ -51,19 +74,36 @@ function extractTag(id: string, source: string): string | null {
   return tagM ? tagM[1] : hdr[1].toLowerCase();
 }
 
-function actionNames(source: string): string[] {
+/** Adds `: unknown` to any unannotated parameter (§11.4). */
+function normalizeParams(params: string): string {
+  if (!params.trim()) return '';
+  return params
+    .split(',')
+    .map((p) => {
+      const seg = p.trim();
+      if (!seg || seg.includes(':')) return seg;
+      return `${seg}: unknown`;
+    })
+    .join(', ');
+}
+
+/** Extracts `actions` method signatures, preserving TS param/return annotations. */
+function actionSignatures(source: string): string[] {
   const lines = source.split('\n');
   const start = lines.findIndex((l) => l.trim().split(/\s+/)[0] === 'actions');
   if (start === -1) return [];
   const STOP = new Set(['end', 'template', 'tpl', 'script', 'effects', 'props', 'style', 'task', 'routes', 'component', 'trait', 'filter', 'token', 'provide', 'router', 'declare', 'import']);
-  const names: string[] = [];
+  const sigs: string[] = [];
   for (let i = start + 1; i < lines.length; i++) {
     const first = lines[i].trim().split(/\s+/)[0];
     if (STOP.has(first)) break;
-    const fn = /\bfunction\s+([A-Za-z_$][\w$]*)\s*\(/.exec(lines[i]);
-    if (fn) names.push(fn[1]);
+    const fn = /\bfunction\s+([A-Za-z_$][\w$]*)\s*\(([^)]*)\)\s*(?::\s*([^{]+?))?\s*\{/.exec(lines[i]);
+    if (fn) {
+      const [, name, params, ret] = fn;
+      sigs.push(`${name}(${normalizeParams(params)}): ${ret ? ret.trim() : 'unknown'}`);
+    }
   }
-  return names;
+  return sigs;
 }
 
 export interface ElementInterface {
@@ -78,7 +118,7 @@ export function generateElementInterface(id: string, source: string): ElementInt
   const tag = extractTag(id, source);
   if (!tag) return null;
   const name = `${pascal(tag)}Element`;
-  const methods = actionNames(source).map((n) => `  ${n}(...args: unknown[]): unknown;`);
+  const methods = actionSignatures(source).map((s) => `  ${s};`);
   const body = methods.length ? `\n${methods.join('\n')}\n` : '';
   // shims.d.ts is a script (only ambient `declare module` blocks), so top-level
   // interface declarations merge with the global lib.dom types directly.
@@ -99,8 +139,10 @@ export function generateTsShim(id: string, source: string, opts: { ambient?: boo
   }
   // In an ambient `declare module { … }` block, `const` is already ambient.
   const constKw = opts.ambient ? 'const' : 'declare const';
+  const imports = id.endsWith('.md') ? [] : dtxImports(source);
   return [
     '// AUTO-GENERATED shim for a UIDetox component. Do not edit.',
+    ...imports,
     propsDecl.startsWith('export') ? propsDecl : `export ${propsDecl}`,
     `${constKw} _default: (props?: Props) => HTMLElement;`,
     'export default _default;',
