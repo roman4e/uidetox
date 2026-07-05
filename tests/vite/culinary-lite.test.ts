@@ -24,4 +24,12 @@ describe('culinary-lite example project', () => {
   it('throws a helpful error for an unknown dotted ref', () => {
     expect(() => core.resolveSpecifier('pages.Missing')).toThrow(/cannot resolve dotted module "pages.Missing"/);
   });
+
+  it('compiles routes.dtx to a RouteEntry[] default export', () => {
+    const out = core.transform(readFileSync(join(projectRoot, 'src/routes.dtx'), 'utf8'), 'routes.dtx');
+    expect(out?.code).toContain('export default [');
+    expect(out?.code).toContain('path: "/login", handler: Login');
+    expect(out?.code).toContain('path: "/", handler: Dashboard');
+    expect(out?.code).toContain('import { Login } from "./pages/Login.js";');
+  });
 });

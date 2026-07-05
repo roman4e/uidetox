@@ -10,7 +10,7 @@ import type {
   Verb,
 } from './types.js';
 
-const VERBS = new Set<Verb>(['trait', 'filter', 'token', 'provide', 'component']);
+const VERBS = new Set<Verb>(['trait', 'filter', 'token', 'provide', 'component', 'router']);
 
 /** Token-based parser for a declaration header (name + clauses). */
 class HeaderParser {
@@ -137,6 +137,7 @@ const SECTION_KIND: Record<string, Member['kind']> = {
   effects: 'effects',
   style: 'style',
   task: 'task',
+  routes: 'routes',
 };
 
 function parseMember(m: RawMember): Member | null {

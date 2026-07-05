@@ -1,4 +1,4 @@
-export type Verb = 'trait' | 'filter' | 'token' | 'provide' | 'component';
+export type Verb = 'trait' | 'filter' | 'token' | 'provide' | 'component' | 'router';
 
 export interface ParamSpec {
   type: string;
@@ -28,7 +28,8 @@ export interface Member {
     | 'effects'
     | 'script'
     | 'props'
-    | 'task';
+    | 'task'
+    | 'routes';
   event?: string;
   name: string | null;
   body?: string;

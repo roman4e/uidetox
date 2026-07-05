@@ -445,6 +445,35 @@ end task
 `token` / `provide` verbs exist (emit `createToken` / `registry.provide`); prefer
 the runtime API in §12 until the DSL forms are exercised by examples.
 
+**`router` verb** compiles to a default-exported `RouteEntry[]` (the runtime
+`defineRouter`'s `routes` param — mode/guards stay in `main.ts`):
+
+```
+import Login from "pages.Login"
+import Dashboard from "pages.Dashboard"
+
+router AppRoutes export
+routes
+"/login" -> Login
+"/users/:id" -> UserProfile param id number guard require-auth priority 10
+"/" -> Dashboard
+end routes
+end router
+```
+
+Each `routes` line is `"<path>" -> <Handler>` with optional trailing
+`param <name> <type>`, `guard <fn>`, `priority <n>`, `status <n>`. Consume it:
+
+```ts
+import routes from "routes";                 // dotted → routes.dtx
+const router = defineRouter({ routes, mode: "history" });
+router.start();
+```
+
+Handlers are the imported component modules — each compiled component
+**default-exports** a factory `() => document.createElement("<tag>")`, and
+importing it registers the custom element. See `examples/culinary-lite/`.
+
 ---
 
 ## 8. Template syntax

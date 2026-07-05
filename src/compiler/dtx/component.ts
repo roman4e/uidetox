@@ -75,6 +75,8 @@ export function emitComponent(decl: Declaration): string {
   bootLines.push('  return __tpl;');
 
   const styleField = style ? `,\n  style: ${sq(style.body ?? '')}` : '';
+  // Default export: a route/handler factory that instantiates the element.
+  // Importing the module also registers the custom element (defineComponent side effect).
   return `${isExport ? 'export ' : ''}const ${decl.name} = defineComponent({
   tag: ${sq(tag)},
   props: ${JSON.stringify(propNames(decl))},
@@ -82,5 +84,6 @@ export function emitComponent(decl: Declaration): string {
 ${bootLines.join('\n')}
   }${styleField}
 });
+export default () => document.createElement(${sq(tag)});
 `;
 }

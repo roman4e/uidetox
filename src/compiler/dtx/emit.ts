@@ -153,6 +153,48 @@ function emitTokenDecl(decl: Declaration): string {
   return `${isExport ? 'export ' : ''}const ${camel} = createToken<${typeName}>(${sq(decl.name)}${opts});\n`;
 }
 
+// A route line: "<path>" -> <Handler> [param <name> <type>]* [guard <fn>]* [priority <n>] [status <n>]
+function parseRouteLine(line: string): string | null {
+  const m = /^"([^"]+)"\s*->\s*(\S+)(.*)$/.exec(line.trim());
+  if (!m) return null;
+  const [, path, handler, restRaw] = m;
+  const rest = restRaw.trim();
+  const params: string[] = [];
+  const guards: string[] = [];
+  let priority = '50';
+  let status = 'null';
+  const tokens = rest.length ? rest.split(/\s+/) : [];
+  for (let i = 0; i < tokens.length; i++) {
+    if (tokens[i] === 'param' && tokens[i + 2]) {
+      params.push(`${sq(tokens[i + 1])}: { type: ${sq(tokens[i + 2])}, optional: false }`);
+      i += 2;
+    } else if (tokens[i] === 'guard' && tokens[i + 1]) {
+      guards.push(kebabToCamel(tokens[i + 1]));
+      i += 1;
+    } else if (tokens[i] === 'priority' && tokens[i + 1]) {
+      priority = tokens[i + 1];
+      i += 1;
+    } else if (tokens[i] === 'status' && tokens[i + 1]) {
+      status = tokens[i + 1];
+      i += 1;
+    }
+  }
+  const schema = params.length ? `{ ${params.join(', ')} }` : '{}';
+  return `{ path: ${sq(path)}, handler: ${kebabToCamel(handler)}, paramsSchema: ${schema}, priority: ${priority}, guards: [${guards.join(', ')}], status: ${status}, meta: {} }`;
+}
+
+// `router` verb → default-exported RouteEntry[] (option 1 from REQ-09 §9.2).
+function emitRouterDecl(decl: Declaration): string {
+  const routesMember = decl.members.find((m) => m.kind === 'routes');
+  const entries: string[] = [];
+  for (const raw of (routesMember?.body ?? '').split('\n')) {
+    if (!raw.trim()) continue;
+    const entry = parseRouteLine(raw);
+    if (entry) entries.push(`  ${entry},`);
+  }
+  return `export default [\n${entries.join('\n')}\n];\n`;
+}
+
 function emitProvideDecl(decl: Declaration): string {
   const tokenName = kebabToCamel(decl.name);
   const defaultMember = decl.members.find((m) => m.kind === 'default');
@@ -240,6 +282,7 @@ export function emitDtx(ast: DtxAst, opts: SpecifierOptions = {}): { code: strin
     else if (decl.verb === 'filter') lines.push(emitFilterDecl(decl));
     else if (decl.verb === 'token') lines.push(emitTokenDecl(decl));
     else if (decl.verb === 'provide') lines.push(emitProvideDecl(decl));
+    else if (decl.verb === 'router') lines.push(emitRouterDecl(decl));
     else if (decl.verb === 'component') lines.push(emitComponent(decl));
   }
   return { code: lines.join('\n') };
