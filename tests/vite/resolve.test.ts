@@ -45,6 +45,14 @@ describe('resolveDottedModule', () => {
     expect(r.tried[0]).toContain('pages/Missing.dtx');
   });
 
+  it('resolves a single-segment ref (Bug 10.3)', () => {
+    const root = mkdtempSync(join(tmpdir(), 'dtx-proj-'));
+    mkdirSync(join(root, 'src'), { recursive: true });
+    writeFileSync(join(root, 'src', 'routes.dtx'), '');
+    const r = resolveDottedModule('routes', cfg(['src']), root);
+    expect(r.path).toBe(join(root, 'src', 'routes.dtx'));
+  });
+
   it('uses the config root when includes is empty', () => {
     const root = mkdtempSync(join(tmpdir(), 'dtx-proj-'));
     mkdirSync(join(root, 'pages'), { recursive: true });

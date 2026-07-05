@@ -13,5 +13,7 @@ integrating the plugin into `~/Work/My/Culinary/culinary-frontend`.
 | # | Request | Priority |
 |---|---|---|
 | 09 | REQ-08 gaps + missing DSL surface | **P0** (7 sub-items, mix of P0/P1/P2) |
+| 10 | Vite plugin integration bugs found in real consumer | **P0** — dev serve broken today |
+| 11 | Router DSL expansion + more bugs + next-batch needs (Cytoscape example, Vitest recipe, LSP) | **P0** (12 sub-items) |
 
-See `req-09-vite-plugin-gaps.md` for the full breakdown.
+See individual files for the full breakdowns.

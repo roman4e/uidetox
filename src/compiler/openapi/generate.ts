@@ -56,7 +56,9 @@ function pascal(s: string): string {
 }
 
 function refName(ref: string): string {
-  return ref.split('/').pop() ?? 'unknown';
+  // Sanitise names like `NutrientAmount-Input` (FastAPI separate_input_output_schemas)
+  // so a `$ref` matches its generated interface name.
+  return pascal(ref.split('/').pop() ?? 'unknown');
 }
 
 function litType(v: unknown): string {

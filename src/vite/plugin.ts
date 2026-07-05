@@ -35,6 +35,11 @@ export interface UidetoxPluginOptions {
   mode?: 'dev' | 'build' | 'test';
 }
 
+/** Strips a Vite query suffix (`?v=…`, `?import`) and a leading virtual `\0`. */
+function cleanId(id: string): string {
+  return id.replace(/^\0/, '').replace(/\?.*$/, '');
+}
+
 /** Shared core used by both the Vite and esbuild plugins. */
 export function createUidetoxCore(opts: UidetoxPluginOptions = {}) {
   const root = opts.root ?? process.cwd();
@@ -114,10 +119,14 @@ export function uidetox(opts: UidetoxPluginOptions = {}): Record<string, unknown
     },
     load(id: string): string | null {
       if (isVirtualCssId(id)) return core.getCss(id) ?? null;
+      // Vite won't load non-JS extensions as modules on its own, so `transform`
+      // never fires for `.dtx`/`.md`. Provide the source here; `transform` compiles it.
+      const file = cleanId(id);
+      if (isComponentSource(file)) return readFileSync(file, 'utf8');
       return null;
     },
     transform(code: string, id: string) {
-      return core.transform(code, id);
+      return core.transform(code, cleanId(id));
     },
     handleHotUpdate(ctx: { file: string; server?: { ws?: { send(p: unknown): void } } }) {
       if (hmr && isComponentSource(ctx.file)) {
@@ -146,13 +155,17 @@ export function uidetoxEsbuild(opts: UidetoxPluginOptions = {}): { name: string;
   return {
     name: 'uidetox',
     setup(build) {
-      build.onResolve({ filter: /^[A-Za-z][\w-]*(?:\.[\w-]+)+$/ }, (args) => {
+      // Any bare specifier (dotted `pages.Login` or single `routes`); a miss
+      // returns null so esbuild falls through to node_modules for npm packages.
+      build.onResolve({ filter: /^[A-Za-z][\w.-]*$/ }, (args) => {
         const path = core.resolveSpecifier(args.path);
         return path ? { path } : null;
       });
+      // Fire in the scan phase too, so component sources are compiled before
+      // esbuild parses them as JS (avoids raw-DSL leaking bare imports).
       build.onLoad({ filter: /\.(dtx|md)$/ }, (args) => {
-        const source = readFileSync(args.path, 'utf8');
-        const out = core.transform(source, args.path);
+        const source = readFileSync(cleanId(args.path), 'utf8');
+        const out = core.transform(source, cleanId(args.path));
         return out ? { contents: out.code, loader: 'js' } : null;
       });
     },

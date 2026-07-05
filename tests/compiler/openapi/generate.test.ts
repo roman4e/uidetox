@@ -15,6 +15,8 @@ describe('typeOf', () => {
 
   it('maps oneOf to a union (discriminated)', () => {
     expect(typeOf({ oneOf: [{ $ref: '#/x/A' }, { $ref: '#/x/B' }] })).toBe('A | B');
+    // FastAPI separate_input_output_schemas hyphenated names → valid TS identifiers
+    expect(typeOf({ $ref: '#/components/schemas/NutrientAmount-Input' })).toBe('NutrientAmountInput');
   });
 
   it('handles nullable via type array', () => {
