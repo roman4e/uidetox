@@ -59,9 +59,10 @@ describe('resolveSpecifier (filesystem, Python-style)', () => {
     // include root: shared.dtx
     writeFileSync(join(inc, 'shared.dtx'), '');
 
-    expect(resolveSpecifier('foo', { baseDir: root })).toBe('./foo.js');
-    expect(resolveSpecifier('bar', { baseDir: root })).toBe('./bar/module.js');
-    expect(resolveSpecifier('shared', { baseDir: root, includes: [inc] })).toContain('.js');
+    // emit the SOURCE specifier verbatim (REQ-15)
+    expect(resolveSpecifier('foo', { baseDir: root })).toBe('./foo.dtx');
+    expect(resolveSpecifier('bar', { baseDir: root })).toBe('./bar/module.dtx');
+    expect(resolveSpecifier('shared', { baseDir: root, includes: [inc] })).toContain('.dtx');
     // not found + single segment → bare npm specifier, verbatim
     expect(resolveSpecifier('missing', { baseDir: root })).toBe('missing');
     // npm/explicit passthrough
@@ -77,8 +78,17 @@ describe('resolveSpecifier (filesystem, Python-style)', () => {
     expect(resolveSpecifier('lodash-es')).toBe('lodash-es');
     expect(resolveSpecifier('uidetox/forms')).toBe('uidetox/forms');
     expect(resolveSpecifier('./sibling.js')).toBe('./sibling.js');
-    // a local .ts, found via extensions → project-relative, extension dropped
+    // a local .ts, found via extensions → project-relative, source extension kept (REQ-15)
     const fromNested = resolveSpecifier('tokens', { baseDir: join(root, 'nested'), includes: [root], extensions: ['.dtx', '.ts'] });
-    expect(fromNested).toBe('../tokens');
+    expect(fromNested).toBe('../tokens.ts');
+  });
+
+  it('preserves the source extension in the emitted specifier (REQ-15)', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ux-'));
+    writeFileSync(join(dir, 'Foo.dtx'), 'component Foo tag foo\nend component\n');
+    mkdirSync(join(dir, 'lib'), { recursive: true });
+    writeFileSync(join(dir, 'lib', 'foo.ts'), '');
+    expect(resolveSpecifier('Foo', { baseDir: dir, includes: [dir], extensions: ['.dtx'] })).toBe('./Foo.dtx');
+    expect(resolveSpecifier('lib.foo', { baseDir: dir, includes: [dir], extensions: ['.dtx', '.ts'] })).toBe('./lib/foo.ts');
   });
 });

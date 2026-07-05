@@ -57,7 +57,7 @@ describe('REQ-14 — user imports resolve (bare npm verbatim, local .ts relative
     const out = (p.transform as (c: string, id: string) => { code: string } | null)(src, login);
     expect(out?.code).toContain('import { registry } from "uidetox";');        // bare npm, NOT ./uidetox.js
     expect(out?.code).toContain('import { form, f } from "uidetox/forms";');    // scoped subpath verbatim
-    expect(out?.code).toContain('import { authToken } from "../tokens";');      // local .ts, project-relative
+    expect(out?.code).toContain('import { authToken } from "../tokens.ts";');      // local .ts, project-relative
     expect(out?.code).not.toContain('./uidetox.js');
   });
 });

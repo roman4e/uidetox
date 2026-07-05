@@ -13,5 +13,6 @@ errors, leaving `dist/` stale.
 |---|---|---|
 | 13 | Unblock `pnpm build` — REQ-10/11 fixes unreachable via `link:.../dist` | **P0** |
 | 14 | DTX import resolver rewrites bare npm specifiers as broken relative paths | **P0** — every `.dtx` file 500s |
+| 15 | DTX compiler emits `.js` extension for local `.dtx` imports — Vite cannot resolve | **P0** — every dotted local ref 500s |
 
 See `req-13-unblock-build.md`.

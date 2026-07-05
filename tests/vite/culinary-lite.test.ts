@@ -39,7 +39,7 @@ describe('culinary-lite example project', () => {
     expect(out?.code).toContain('"id": { type: "string", optional: false }');
     expect(out?.code).toContain('path: "**", handler: NotFound');
     expect(out?.code).toContain('status: 404');
-    expect(out?.code).toContain('import { Login } from "./pages/Login.js";');
+    expect(out?.code).toContain('import { Login } from "./pages/Login.dtx";');
   });
 
   it('resolves layout/guard dotted refs (incl. .ts guard)', () => {

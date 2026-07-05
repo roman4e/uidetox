@@ -71,10 +71,11 @@ export interface SpecifierOptions {
 function toRelative(baseDir: string, target: string): string {
   let rel = relative(baseDir, target).replace(/\\/g, '/');
   if (!rel.startsWith('.')) rel = './' + rel;
-  // Compiled component sources become `.js`; TS/JS modules drop the extension so
-  // the bundler resolves them (`../tokens.ts` → `../tokens`).
-  if (/\.(dtx|md)$/.test(rel)) return rel.replace(/\.(dtx|md)$/, '.js');
-  return rel.replace(/\.(ts|tsx|js|mjs|cjs)$/, '');
+  // Emit the SOURCE specifier verbatim (`.dtx`/`.md`/`.ts`). Under Vite the
+  // plugin's load/transform hook compiles `.dtx`/`.md` on demand and hands `.ts`
+  // to Vite's own pipeline — so imports must point at the source, not a `.js`
+  // that the dev server never writes (REQ-15).
+  return rel;
 }
 
 /**
