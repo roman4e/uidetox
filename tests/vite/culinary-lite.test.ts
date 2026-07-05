@@ -31,11 +31,19 @@ describe('culinary-lite example project', () => {
     expect(() => core.resolveSpecifier('pages.Missing')).toThrow(/cannot resolve dotted module "pages.Missing"/);
   });
 
-  it('compiles routes.dtx to a RouteEntry[] default export', () => {
+  it('compiles routes.dtx (groups, layout/guard, params, catch-all) to RouteEntry[]', () => {
     const out = core.transform(readFileSync(join(projectRoot, 'src/routes.dtx'), 'utf8'), 'routes.dtx');
     expect(out?.code).toContain('export default [');
     expect(out?.code).toContain('path: "/login", handler: Login');
-    expect(out?.code).toContain('path: "/", handler: Dashboard');
+    expect(out?.code).toMatch(/path: "\/", handler: Dashboard[\s\S]*?guards: \[requireAuth\][\s\S]*?meta: \{ layout: AppShell \}/);
+    expect(out?.code).toContain('"id": { type: "string", optional: false }');
+    expect(out?.code).toContain('path: "**", handler: NotFound');
+    expect(out?.code).toContain('status: 404');
     expect(out?.code).toContain('import { Login } from "./pages/Login.js";');
+  });
+
+  it('resolves layout/guard dotted refs (incl. .ts guard)', () => {
+    expect(core.resolveSpecifier('layouts.AppShell')).toBe(join(projectRoot, 'src', 'layouts', 'AppShell.dtx'));
+    expect(core.resolveSpecifier('lib.auth-guard')).toBe(join(projectRoot, 'src', 'lib', 'auth-guard.ts'));
   });
 });

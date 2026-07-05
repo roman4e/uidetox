@@ -1,9 +1,18 @@
 import Login from "pages.Login"
 import Dashboard from "pages.Dashboard"
+import NotFound from "pages.NotFound"
+import AppShell from "layouts.AppShell"
+import requireAuth from "lib.auth-guard"
 
 router AppRoutes export
 routes
 "/login" -> Login
-"/" -> Dashboard
+
+group layout=AppShell guard=requireAuth
+"/"              -> Dashboard
+"/recipes/:id"   -> Dashboard { id: string }
+end group
+
+"**" -> NotFound status=404
 end routes
 end router

@@ -52,8 +52,14 @@ function normKeyword(kw: string): string {
 function captureSection(lines: string[], start: number): { body: string; next: number } {
   const bodyLines: string[] = [];
   let i = start;
+  let groupDepth = 0; // `group … end group` nests inside a section (router routes)
   while (i < lines.length) {
     const fw = firstWord(lines[i]);
+    const sw = lines[i].trim().split(/\s+/)[1];
+    if (fw === 'group') { groupDepth++; bodyLines.push(lines[i]); i++; continue; }
+    if (fw === 'end' && sw === 'group' && groupDepth > 0) {
+      groupDepth--; bodyLines.push(lines[i]); i++; continue;
+    }
     if (ALL_TERMINATORS.has(fw)) {
       if (fw === 'end') { i++; }
       break;

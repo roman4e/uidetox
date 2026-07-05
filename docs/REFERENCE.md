@@ -451,18 +451,37 @@ the runtime API in §12 until the DSL forms are exercised by examples.
 ```
 import Login from "pages.Login"
 import Dashboard from "pages.Dashboard"
+import NotFound from "pages.NotFound"
+import AppShell from "layouts.AppShell"
+import requireAuth from "lib.auth-guard"
 
 router AppRoutes export
 routes
 "/login" -> Login
-"/users/:id" -> UserProfile param id number guard require-auth priority 10
-"/" -> Dashboard
+
+group layout=AppShell guard=requireAuth
+"/"                -> Dashboard
+"/recipes/:id"     -> RecipeCard  { id: string }
+"/moderation"      -> Moderation  guard=require-chef-admin
+end group
+
+"/kitchen/:id" layout=KitchenShell -> KitchenMode { id: string }
+"**" -> NotFound status=404
 end routes
 end router
 ```
 
-Each `routes` line is `"<path>" -> <Handler>` with optional trailing
-`param <name> <type>`, `guard <fn>`, `priority <n>`, `status <n>`. Consume it:
+Each `routes` line is `"<path>" [clauses] -> <Handler> [clauses] [{ params }]`:
+
+- **Clauses** (before or after `->`): `layout=X`, `guard=fn`, `guards=[a,b]`,
+  `status=N`, `priority=N`. `layout` lands in `meta.layout`.
+- **`group … end group`** applies its clauses to every route inside; per-route
+  clauses add/override (guards accumulate).
+- **Params** `{ id: string, page: int? default(1) }` → `paramsSchema` (`?` =
+  optional, `default(v)` = default). Types: `string`/`number`/`int`/`boolean`.
+- **Catch-all** `"**"`.
+
+Consume it:
 
 ```ts
 import routes from "routes";                 // dotted → routes.dtx

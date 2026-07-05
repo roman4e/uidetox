@@ -153,43 +153,95 @@ function emitTokenDecl(decl: Declaration): string {
   return `${isExport ? 'export ' : ''}const ${camel} = createToken<${typeName}>(${sq(decl.name)}${opts});\n`;
 }
 
-// A route line: "<path>" -> <Handler> [param <name> <type>]* [guard <fn>]* [priority <n>] [status <n>]
-function parseRouteLine(line: string): string | null {
-  const m = /^"([^"]+)"\s*->\s*(\S+)(.*)$/.exec(line.trim());
-  if (!m) return null;
-  const [, path, handler, restRaw] = m;
-  const rest = restRaw.trim();
-  const params: string[] = [];
-  const guards: string[] = [];
-  let priority = '50';
-  let status = 'null';
-  const tokens = rest.length ? rest.split(/\s+/) : [];
-  for (let i = 0; i < tokens.length; i++) {
-    if (tokens[i] === 'param' && tokens[i + 2]) {
-      params.push(`${sq(tokens[i + 1])}: { type: ${sq(tokens[i + 2])}, optional: false }`);
-      i += 2;
-    } else if (tokens[i] === 'guard' && tokens[i + 1]) {
-      guards.push(kebabToCamel(tokens[i + 1]));
-      i += 1;
-    } else if (tokens[i] === 'priority' && tokens[i + 1]) {
-      priority = tokens[i + 1];
-      i += 1;
-    } else if (tokens[i] === 'status' && tokens[i + 1]) {
-      status = tokens[i + 1];
-      i += 1;
-    }
-  }
-  const schema = params.length ? `{ ${params.join(', ')} }` : '{}';
-  return `{ path: ${sq(path)}, handler: ${kebabToCamel(handler)}, paramsSchema: ${schema}, priority: ${priority}, guards: [${guards.join(', ')}], status: ${status}, meta: {} }`;
+interface RouteClauses {
+  layout?: string;
+  guards: string[];
+  status?: string;
+  priority?: string;
 }
 
-// `router` verb → default-exported RouteEntry[] (option 1 from REQ-09 §9.2).
+// Parses `key=value` clauses: layout=X, guard=Y, guards=[a,b], status=N, priority=N.
+function parseClauses(tokens: string[], into: RouteClauses): void {
+  for (const tok of tokens) {
+    const eq = tok.indexOf('=');
+    if (eq === -1) continue;
+    const key = tok.slice(0, eq);
+    const val = tok.slice(eq + 1);
+    if (key === 'layout') into.layout = kebabToCamel(val);
+    else if (key === 'guard') into.guards.push(kebabToCamel(val));
+    else if (key === 'guards') {
+      for (const g of val.replace(/^\[|\]$/g, '').split(',')) {
+        if (g.trim()) into.guards.push(kebabToCamel(g.trim()));
+      }
+    } else if (key === 'status') into.status = val;
+    else if (key === 'priority') into.priority = val;
+  }
+}
+
+// Parses a `{ id: string, page: int? default(1) }` param block into schema entries.
+function parseParamBlock(block: string): string[] {
+  const inner = block.replace(/^\{|\}$/g, '').trim();
+  if (!inner) return [];
+  return inner.split(',').map((raw) => {
+    const seg = raw.trim();
+    const m = /^([A-Za-z_$][\w$]*)\s*:\s*([A-Za-z]+)(\??)\s*(?:default\(([^)]*)\))?$/.exec(seg);
+    if (!m) return `${sq(seg)}: { type: "string", optional: false }`;
+    const [, name, type, opt, def] = m;
+    const parts = [`type: ${sq(type)}`, `optional: ${opt ? 'true' : 'false'}`];
+    if (def !== undefined) parts.push(`default: ${def}`);
+    return `${sq(name)}: { ${parts.join(', ')} }`;
+  });
+}
+
+// A route line: "<path>" [clauses] -> <Handler> [clauses] [{ params }]
+function parseRouteLine(line: string, group: RouteClauses): string | null {
+  let rest = line.trim();
+  const pathM = /^"([^"]*)"\s*/.exec(rest);
+  if (!pathM) return null;
+  const path = pathM[1];
+  rest = rest.slice(pathM[0].length);
+
+  // Trailing param block.
+  let paramBlock = '';
+  const braceM = /\{[^}]*\}\s*$/.exec(rest);
+  if (braceM) { paramBlock = braceM[0].trim(); rest = rest.slice(0, braceM.index); }
+
+  const arrow = rest.split('->');
+  const preTokens = arrow[0].trim().split(/\s+/).filter(Boolean);
+  const post = (arrow[1] ?? '').trim().split(/\s+/).filter(Boolean);
+  const handler = post.shift();
+  if (!handler) return null;
+
+  const clauses: RouteClauses = {
+    layout: group.layout,
+    guards: [...group.guards],
+    status: group.status,
+    priority: group.priority,
+  };
+  parseClauses(preTokens, clauses);
+  parseClauses(post, clauses);
+
+  const schema = parseParamBlock(paramBlock);
+  const schemaStr = schema.length ? `{ ${schema.join(', ')} }` : '{}';
+  const meta = clauses.layout ? `{ layout: ${clauses.layout} }` : '{}';
+  return `{ path: ${sq(path)}, handler: ${kebabToCamel(handler)}, paramsSchema: ${schemaStr}, priority: ${clauses.priority ?? '50'}, guards: [${clauses.guards.join(', ')}], status: ${clauses.status ?? 'null'}, meta: ${meta} }`;
+}
+
+// `router` verb → default-exported RouteEntry[] (REQ-09 §9.2, REQ-11 §11.1).
 function emitRouterDecl(decl: Declaration): string {
   const routesMember = decl.members.find((m) => m.kind === 'routes');
   const entries: string[] = [];
+  let group: RouteClauses = { guards: [] };
   for (const raw of (routesMember?.body ?? '').split('\n')) {
-    if (!raw.trim()) continue;
-    const entry = parseRouteLine(raw);
+    const line = raw.trim();
+    if (!line) continue;
+    if (line.startsWith('group')) {
+      group = { guards: [] };
+      parseClauses(line.slice('group'.length).trim().split(/\s+/).filter(Boolean), group);
+      continue;
+    }
+    if (line.startsWith('end group')) { group = { guards: [] }; continue; }
+    const entry = parseRouteLine(line, group);
     if (entry) entries.push(`  ${entry},`);
   }
   return `export default [\n${entries.join('\n')}\n];\n`;

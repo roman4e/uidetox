@@ -20,18 +20,67 @@ end router
     expect(code).toContain('{ path: "/", handler: Dashboard,');
   });
 
-  it('parses param, guard, priority, status modifiers', () => {
+  it('parses per-route clauses and a param block', () => {
     const src = `router R export
 routes
-"/users/:id" -> UserProfile param id number guard require-auth priority 10 status 200
+"/users/:id" -> UserProfile guard=require-auth priority=10 status=200 { id: string }
 end routes
 end router
 `;
     const { code } = compileDtx(src);
-    expect(code).toContain('paramsSchema: { "id": { type: "number", optional: false } }');
+    expect(code).toContain('paramsSchema: { "id": { type: "string", optional: false } }');
     expect(code).toContain('guards: [requireAuth]');
     expect(code).toContain('priority: 10');
     expect(code).toContain('status: 200');
+  });
+
+  it('applies group clauses (layout + guard) with per-route override', () => {
+    const src = `router R export
+routes
+"/login" -> Login
+
+group layout=AppShell guard=requireAuth
+"/"            -> Dashboard
+"/moderation"  -> ModerationQueue guard=requireChefAdmin
+end group
+
+"**" -> NotFound status=404
+end routes
+end router
+`;
+    const { code } = compileDtx(src);
+    // group applies layout + guard
+    expect(code).toContain('{ path: "/", handler: Dashboard, paramsSchema: {}, priority: 50, guards: [requireAuth], status: null, meta: { layout: AppShell } }');
+    // per-route guard adds to the group guard
+    expect(code).toContain('handler: ModerationQueue');
+    expect(code).toMatch(/handler: ModerationQueue[\s\S]*?guards: \[requireAuth, requireChefAdmin\][\s\S]*?meta: \{ layout: AppShell \}/);
+    // route outside the group has no layout/guard
+    expect(code).toContain('{ path: "/login", handler: Login, paramsSchema: {}, priority: 50, guards: [], status: null, meta: {} }');
+    // catch-all with status
+    expect(code).toContain('{ path: "**", handler: NotFound, paramsSchema: {}, priority: 50, guards: [], status: 404, meta: {} }');
+  });
+
+  it('parses optional param with a default', () => {
+    const src = `router R export
+routes
+"/list" -> List { page: int? default(1) }
+end routes
+end router
+`;
+    const { code } = compileDtx(src);
+    expect(code).toContain('"page": { type: "int", optional: true, default: 1 }');
+  });
+
+  it('supports layout+guard on a single route line (clauses before ->)', () => {
+    const src = `router R export
+routes
+"/kitchen/:recipeId" layout=KitchenShell guard=requireAuth -> KitchenMode { recipeId: string }
+end routes
+end router
+`;
+    const { code } = compileDtx(src);
+    expect(code).toMatch(/handler: KitchenMode[\s\S]*?guards: \[requireAuth\][\s\S]*?meta: \{ layout: KitchenShell \}/);
+    expect(code).toContain('"recipeId": { type: "string", optional: false }');
   });
 
   it('component modules default-export an element factory', () => {
