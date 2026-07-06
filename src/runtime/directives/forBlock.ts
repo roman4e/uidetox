@@ -1,8 +1,13 @@
 import type { TemplateCtx } from '../component.js';
 import { effect } from '../effect.js';
 
+const FRAGMENT_NODE = 11; // Node.DOCUMENT_FRAGMENT_NODE
+
 interface Slot<T> {
-  node: Node;
+  /** The real DOM nodes for this item (a multi-element body is a fragment). */
+  nodes: Node[];
+  /** The single node to insert/move (the fragment, or the one element). */
+  mount: Node;
   item: T;
 }
 
@@ -10,6 +15,10 @@ export interface ForHooks {
   onInsert?: (node: Node) => void;
   onRemove?: (node: Node, done: () => void) => void;
   onMove?: (node: Node) => void;
+}
+
+function firstNode<T>(slot: Slot<T>): Node | null {
+  return slot.nodes[0] ?? null;
 }
 
 export function renderFor<T>(
@@ -24,6 +33,12 @@ export function renderFor<T>(
   const slots = new Map<unknown, Slot<T>>();
   let order: unknown[] = [];
 
+  const removeSlot = (slot: Slot<T>): void => {
+    const done = (): void => { for (const n of slot.nodes) n.parentNode?.removeChild(n); };
+    if (hooks.onRemove) hooks.onRemove(firstNode(slot) ?? slot.mount, done);
+    else done();
+  };
+
   effect(() => {
     const list = source();
     const nextOrder = list.map((item, i) => keyOf(item, i));
@@ -31,14 +46,7 @@ export function renderFor<T>(
     for (const key of order) {
       if (!nextSet.has(key)) {
         const slot = slots.get(key);
-        if (slot) {
-          slots.delete(key);
-          if (hooks.onRemove) {
-            hooks.onRemove(slot.node, () => slot.node.parentNode?.removeChild(slot.node));
-          } else {
-            slot.node.parentNode?.removeChild(slot.node);
-          }
-        }
+        if (slot) { slots.delete(key); removeSlot(slot); }
       }
     }
     let cursor: Node = anchor;
@@ -48,21 +56,25 @@ export function renderFor<T>(
       let slot = slots.get(key);
       let inserted = false;
       if (!slot) {
-        slot = { node: bodyFactory(item, i, ctx), item };
+        const mount = bodyFactory(item, i, ctx);
+        const nodes = mount.nodeType === FRAGMENT_NODE ? Array.from(mount.childNodes) : [mount];
+        slot = { nodes, mount, item };
         slots.set(key, slot);
         inserted = true;
       } else if (slot.item !== item) {
         slot.item = item;
       }
       const expectedNext = cursor.nextSibling;
-      if (slot.node !== expectedNext) {
-        parent.insertBefore(slot.node, expectedNext);
-        if (inserted) hooks.onInsert?.(slot.node);
-        else hooks.onMove?.(slot.node);
+      const first = firstNode(slot);
+      if (first !== expectedNext) {
+        // Insert/move the whole group before the expected position.
+        for (const n of slot.nodes) parent.insertBefore(n, expectedNext);
+        if (inserted) hooks.onInsert?.(first ?? slot.mount);
+        else hooks.onMove?.(first ?? slot.mount);
       } else if (inserted) {
-        hooks.onInsert?.(slot.node);
+        hooks.onInsert?.(first ?? slot.mount);
       }
-      cursor = slot.node;
+      cursor = slot.nodes[slot.nodes.length - 1] ?? cursor;
     }
     order = nextOrder;
   });

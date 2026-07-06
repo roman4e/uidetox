@@ -8,6 +8,8 @@ export interface CaseArm {
   factory: (ctx: TemplateCtx) => Node;
 }
 
+const FRAGMENT_NODE = 11; // Node.DOCUMENT_FRAGMENT_NODE
+
 export function renderCase(
   parent: Node,
   anchor: Node,
@@ -16,7 +18,7 @@ export function renderCase(
   ctx: TemplateCtx,
 ): void {
   let currentIndex = -1;
-  let currentNode: Node | null = null;
+  let currentNodes: Node[] = [];
   effect(() => {
     const value = subject();
     let matchedIndex = arms.findIndex(
@@ -26,9 +28,13 @@ export function renderCase(
       matchedIndex = arms.findIndex((a) => a.match === CASE_DEFAULT);
     }
     if (matchedIndex === currentIndex) return;
-    if (currentNode) currentNode.parentNode?.removeChild(currentNode);
-    currentNode = matchedIndex === -1 ? null : arms[matchedIndex].factory(ctx);
-    if (currentNode) parent.insertBefore(currentNode, anchor.nextSibling);
+    for (const n of currentNodes) n.parentNode?.removeChild(n);
+    currentNodes = [];
+    const node = matchedIndex === -1 ? null : arms[matchedIndex].factory(ctx);
+    if (node) {
+      currentNodes = node.nodeType === FRAGMENT_NODE ? Array.from(node.childNodes) : [node];
+      parent.insertBefore(node, anchor.nextSibling);
+    }
     currentIndex = matchedIndex;
   });
 }

@@ -17,5 +17,6 @@ errors, leaving `dist/` stale.
 | 16 | `router` verb emits named imports; page components are default exports → `handler: undefined` | **P0** — router crashes in prod |
 | 17 | Router outlet ignores `meta.layout` — screens render without their AppShell | P1 |
 | 18 | Router matched params never reach page component (props.id === undefined) | **P0** |
+| 19 | `resource.reload()` doesn't invalidate + `<for>` keyed diff appends stale items | **P0** |
 
 See `req-13-unblock-build.md`.
