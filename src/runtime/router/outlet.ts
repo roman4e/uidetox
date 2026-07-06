@@ -30,8 +30,21 @@ export function registerOutlet(): void {
     }
 
     private async render(m: MatchedRoute): Promise<void> {
+      const ctx = { params: m.params, route: m.entry, location: m.location };
       const fn = await resolveHandler(m.entry.handler);
-      const node = await fn({ params: m.params, route: m.entry, location: m.location });
+      const pageNode = await fn(ctx);
+
+      // Wrap the page in its layout (from `meta.layout`); the layout's default
+      // <slot/> projects the page. One level for MVP (REQ-17).
+      const layout = m.entry.meta?.layout as Handler | undefined;
+      let node: Node = pageNode;
+      if (layout) {
+        const layoutFn = await resolveHandler(layout);
+        const layoutNode = await layoutFn(ctx);
+        layoutNode.appendChild(pageNode);
+        node = layoutNode;
+      }
+
       while (this.firstChild) this.removeChild(this.firstChild);
       this.appendChild(node);
     }

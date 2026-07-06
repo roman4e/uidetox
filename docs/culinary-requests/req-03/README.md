@@ -15,5 +15,6 @@ errors, leaving `dist/` stale.
 | 14 | DTX import resolver rewrites bare npm specifiers as broken relative paths | **P0** — every `.dtx` file 500s |
 | 15 | DTX compiler emits `.js` extension for local `.dtx` imports — Vite cannot resolve | **P0** — every dotted local ref 500s |
 | 16 | `router` verb emits named imports; page components are default exports → `handler: undefined` | **P0** — router crashes in prod |
+| 17 | Router outlet ignores `meta.layout` — screens render without their AppShell | P1 |
 
 See `req-13-unblock-build.md`.

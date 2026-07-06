@@ -728,6 +728,16 @@ router.controller.goto('/users/42');
 - **Match order**: specificity `[segments, staticSegs, catchAll]` then `priority`.
 - **`applyMetadata(payload)`** upserts `<title>`, meta/OG tags, and append-once
   `link`/`script`/JSON-LD into `<head>`.
+- **Layouts**: when a matched route carries `meta.layout` (a handler — from the
+  router DSL `layout=` clause), `<router-outlet>` renders the layout and projects
+  the page into the layout's default `<slot>`: `<app-shell><…page…></app-shell>`.
+  One level for now; nested layouts are a follow-up.
+
+### Slot projection
+
+A component's template `<slot>` receives the light-DOM children present when the
+element connects. `<app-card>content</app-card>` places `content` where the
+`<slot>` sits in `AppCard`'s template. No `<slot>` → children append at the end.
 
 ---
 

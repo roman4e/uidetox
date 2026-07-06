@@ -68,6 +68,10 @@ export function defineComponent(options: ComponentOptions): void {
           this._props[name] = this.getAttribute(name);
         }
       }
+      // Capture light-DOM children present at connect — these are the slotted
+      // content, projected into the template's <slot> after boot.
+      const slotted: ChildNode[] = [];
+      while (this.firstChild) { slotted.push(this.firstChild); this.removeChild(this.firstChild); }
       const refs: Record<string, Element> = {};
       const ctx: TemplateCtx = {
         props: this._props,
@@ -108,6 +112,13 @@ export function defineComponent(options: ComponentOptions): void {
         setCleanupSink(null);
       }
       this.appendChild(node);
+      // Project slotted content into the template's default <slot> (light DOM).
+      // No <slot> → append at the end so content isn't lost.
+      if (slotted.length) {
+        const slot = this.querySelector('slot');
+        if (slot) slot.replaceWith(...slotted);
+        else for (const n of slotted) this.appendChild(n);
+      }
       if (options.style) {
         const styleEl = document.createElement('style');
         styleEl.textContent = options.style;
