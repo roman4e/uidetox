@@ -122,11 +122,24 @@ interface P5Element {
   tagName?: string;
   attrs?: Array<{ name: string; value: string }>;
   childNodes?: P5Element[];
+  /** parse5 stores <template> children in a content DocumentFragment. */
+  content?: { childNodes: P5Element[] };
   sourceCodeLocation?: {
     startTag?: { startOffset: number; endOffset: number };
     startOffset?: number;
   };
   value?: string;
+}
+
+// Control-flow tags that the HTML5 parser would strip inside <select>/<table>/….
+// Rewrite them to <template data-uidx="<tag>"> before parsing (parse5 keeps
+// <template> anywhere), then reconstruct the original element in `convert`.
+const CONTROL_FLOW_TAGS = 'virtual-for|for|if|else|case|when';
+
+function rewriteControlFlow(source: string): string {
+  return source
+    .replace(new RegExp(`<(${CONTROL_FLOW_TAGS})(\\s|>)`, 'g'), '<template data-uidx="$1"$2')
+    .replace(new RegExp(`</(${CONTROL_FLOW_TAGS})>`, 'g'), '</template>');
 }
 
 function camelize(name: string): string {
@@ -172,17 +185,26 @@ function convert(
     return splitTextWithInterpolations(node.value ?? '', exprs);
   }
   if (node.tagName) {
+    // A rewritten control-flow element: reconstruct its real tag + take children
+    // from the <template> content fragment.
+    const uidx = node.tagName === 'template'
+      ? node.attrs?.find((a) => a.name === 'data-uidx')?.value
+      : undefined;
     const offset =
       node.sourceCodeLocation?.startTag?.startOffset ??
       node.sourceCodeLocation?.startOffset;
     const authorTag =
+      uidx ??
       (offset !== undefined ? casedByOffset.get(offset) : undefined) ??
       node.tagName;
-    const attrs: TplAttr[] = (node.attrs ?? []).map((a) =>
-      classifyAttr(a.name, a.value, exprs),
-    );
+    const attrs: TplAttr[] = (node.attrs ?? [])
+      .filter((a) => a.name !== 'data-uidx')
+      .map((a) => classifyAttr(a.name, a.value, exprs));
+    const childNodes = (uidx || node.tagName === 'template')
+      ? node.content?.childNodes ?? []
+      : node.childNodes ?? [];
     const children: TplNode[] = [];
-    for (const child of node.childNodes ?? []) {
+    for (const child of childNodes) {
       children.push(...convert(child, casedByOffset, source, exprs));
     }
     const el: TplNode = { type: 'element', tag: authorTag, attrs, children };
@@ -212,7 +234,7 @@ function expandSelfClosing(source: string): string {
 
 export function parseTemplate(source: string): TplNode[] {
   const { masked, exprs } = protectExpressions(source);
-  const normalized = expandSelfClosing(masked);
+  const normalized = rewriteControlFlow(expandSelfClosing(masked));
   const casedByOffset = collectAuthorCasing(normalized);
   const fragment = parseFragment(normalized, { sourceCodeLocationInfo: true });
   const out: TplNode[] = [];
