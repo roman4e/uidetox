@@ -227,6 +227,46 @@ function parseRouteLine(line: string, group: RouteClauses): string | null {
   return `{ path: ${sq(path)}, handler: ${kebabToCamel(handler)}, paramsSchema: ${schemaStr}, priority: ${clauses.priority ?? '50'}, guards: [${clauses.guards.join(', ')}], status: ${clauses.status ?? 'null'}, meta: ${meta} }`;
 }
 
+// Identifiers referenced as route handlers / layouts / guards. These are the
+// components' and guards' DEFAULT exports, so their imports must be default
+// imports, not named (REQ-16). `defineComponent()` returns void — a named
+// import would bind to `undefined`.
+function collectRouterRefs(decl: Declaration): Set<string> {
+  const refs = new Set<string>();
+  const body = decl.members.find((m) => m.kind === 'routes')?.body ?? '';
+  const add = (c: RouteClauses): void => {
+    if (c.layout) refs.add(c.layout);
+    for (const g of c.guards) refs.add(g);
+  };
+  let group: RouteClauses = { guards: [] };
+  for (const raw of body.split('\n')) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (line.startsWith('group')) {
+      group = { guards: [] };
+      parseClauses(line.slice('group'.length).trim().split(/\s+/).filter(Boolean), group);
+      add(group);
+      continue;
+    }
+    if (line.startsWith('end group')) { group = { guards: [] }; continue; }
+    const pathM = /^"([^"]*)"\s*/.exec(line);
+    if (!pathM) continue;
+    let rest = line.slice(pathM[0].length);
+    const braceM = /\{[^}]*\}\s*$/.exec(rest);
+    if (braceM) rest = rest.slice(0, braceM.index);
+    const arrow = rest.split('->');
+    const preTokens = arrow[0].trim().split(/\s+/).filter(Boolean);
+    const post = (arrow[1] ?? '').trim().split(/\s+/).filter(Boolean);
+    const handler = post.shift();
+    if (handler) refs.add(kebabToCamel(handler));
+    const clauses: RouteClauses = { layout: group.layout, guards: [...group.guards] };
+    parseClauses(preTokens, clauses);
+    parseClauses(post, clauses);
+    add(clauses);
+  }
+  return refs;
+}
+
 // `router` verb → default-exported RouteEntry[] (REQ-09 §9.2, REQ-11 §11.1).
 function emitRouterDecl(decl: Declaration): string {
   const routesMember = decl.members.find((m) => m.kind === 'routes');
@@ -254,7 +294,7 @@ function emitProvideDecl(decl: Declaration): string {
   return `registry.provide(${tokenName}, function() {${providerBody}\n});\n`;
 }
 
-function emitImport(imp: ImportStatement, opts: SpecifierOptions): string {
+function emitImport(imp: ImportStatement, opts: SpecifierOptions, defaultRefs: Set<string>): string {
   // Bare `import name` (no from) → side-effect import, resolved as a dtx specifier.
   if (imp.from === null) {
     const first = imp.items[0]?.source ?? '';
@@ -263,6 +303,12 @@ function emitImport(imp: ImportStatement, opts: SpecifierOptions): string {
   const spec = resolveSpecifier(imp.from, opts);
   if (imp.namespace) return `import * as ${imp.namespace} from ${sq(spec)};\n`;
   if (imp.items.length === 0) return `import ${sq(spec)};\n`;
+  // A single-name import referenced as a router handler/layout/guard binds to
+  // the target's DEFAULT export (component factory / guard fn) — emit default (REQ-16).
+  if (imp.items.length === 1 && !imp.items[0].alias) {
+    const nm = kebabToCamel(imp.items[0].source);
+    if (defaultRefs.has(nm)) return `import ${nm} from ${sq(spec)};\n`;
+  }
   const names = imp.items.map((it) => {
     const src = kebabToCamel(it.source);
     const alias = it.alias ? kebabToCamel(it.alias) : undefined;
@@ -322,11 +368,16 @@ function emitDeclare(d: DeclareDecl): string {
 
 export function emitDtx(ast: DtxAst, opts: SpecifierOptions = {}): { code: string } {
   const runtimeImports = collectImports(ast);
+  // Names referenced as router handlers/layouts/guards → emit as default imports.
+  const defaultRefs = new Set<string>();
+  for (const decl of ast.declarations) {
+    if (decl.verb === 'router') for (const r of collectRouterRefs(decl)) defaultRefs.add(r);
+  }
   const lines: string[] = [];
   for (const name of runtimeImports) {
     lines.push(`import { ${name} } from ${sq(RUNTIME_MODULE)};`);
   }
-  for (const imp of ast.imports) lines.push(emitImport(imp, opts).trimEnd());
+  for (const imp of ast.imports) lines.push(emitImport(imp, opts, defaultRefs).trimEnd());
   lines.push('');
   for (const d of ast.declares ?? []) lines.push(emitDeclare(d));
   for (const decl of ast.declarations) {
