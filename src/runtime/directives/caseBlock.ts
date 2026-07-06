@@ -1,5 +1,6 @@
 import type { TemplateCtx } from '../component.js';
 import { effect } from '../effect.js';
+import { createScope, disposeScope, onDispose, runInScope, type Scope } from '../scope.js';
 
 export const CASE_DEFAULT = Symbol('uidetox.case.default');
 
@@ -8,8 +9,6 @@ export interface CaseArm {
   factory: (ctx: TemplateCtx) => Node;
 }
 
-const FRAGMENT_NODE = 11; // Node.DOCUMENT_FRAGMENT_NODE
-
 export function renderCase(
   parent: Node,
   anchor: Node,
@@ -17,23 +16,30 @@ export function renderCase(
   arms: CaseArm[],
   ctx: TemplateCtx,
 ): void {
+  const end = document.createTextNode('');
+  parent.insertBefore(end, anchor.nextSibling);
+
   let currentIndex = -1;
-  let currentNodes: Node[] = [];
+  let scope: Scope | null = null;
+
+  const teardown = (): void => {
+    if (scope) { disposeScope(scope); scope = null; }
+    while (anchor.nextSibling && anchor.nextSibling !== end) {
+      parent.removeChild(anchor.nextSibling);
+    }
+  };
+  onDispose(teardown);
+
   effect(() => {
     const value = subject();
-    let matchedIndex = arms.findIndex(
-      (a) => a.match !== CASE_DEFAULT && a.match === value,
-    );
-    if (matchedIndex === -1) {
-      matchedIndex = arms.findIndex((a) => a.match === CASE_DEFAULT);
-    }
+    let matchedIndex = arms.findIndex((a) => a.match !== CASE_DEFAULT && a.match === value);
+    if (matchedIndex === -1) matchedIndex = arms.findIndex((a) => a.match === CASE_DEFAULT);
     if (matchedIndex === currentIndex) return;
-    for (const n of currentNodes) n.parentNode?.removeChild(n);
-    currentNodes = [];
-    const node = matchedIndex === -1 ? null : arms[matchedIndex].factory(ctx);
-    if (node) {
-      currentNodes = node.nodeType === FRAGMENT_NODE ? Array.from(node.childNodes) : [node];
-      parent.insertBefore(node, anchor.nextSibling);
+    teardown();
+    if (matchedIndex !== -1) {
+      scope = createScope();
+      const node = runInScope(scope, () => arms[matchedIndex].factory(ctx));
+      parent.insertBefore(node, end);
     }
     currentIndex = matchedIndex;
   });

@@ -5,6 +5,7 @@ import { renderFor } from './directives/forBlock.js';
 import { renderVirtualFor, type VirtualForOptions } from './directives/virtualForBlock.js';
 import { CASE_DEFAULT, renderCase, type CaseArm } from './directives/caseBlock.js';
 import { installTraits, type UseSpec } from './traits/install.js';
+import { getCurrentScope, runInScope } from './scope.js';
 
 export { CASE_DEFAULT };
 
@@ -191,9 +192,10 @@ export function __if(
   ctx: TemplateCtx,
 ): Node {
   const anchor = document.createTextNode('');
+  const scope = getCurrentScope();
   queueMicrotask(() => {
     if (!anchor.parentNode) return;
-    renderIf(anchor.parentNode, anchor, cond, whenTrue, whenFalse, ctx);
+    runInScope(scope, () => renderIf(anchor.parentNode!, anchor, cond, whenTrue, whenFalse, ctx));
   });
   return anchor;
 }
@@ -205,9 +207,10 @@ export function __for<T>(
   ctx: TemplateCtx,
 ): Node {
   const anchor = document.createTextNode('');
+  const scope = getCurrentScope();
   queueMicrotask(() => {
     if (!anchor.parentNode) return;
-    renderFor(anchor.parentNode, anchor, source, keyOf, bodyFactory, ctx);
+    runInScope(scope, () => renderFor(anchor.parentNode!, anchor, source, keyOf, bodyFactory, ctx));
   });
   return anchor;
 }
@@ -228,9 +231,10 @@ export function __case(
   ctx: TemplateCtx,
 ): Node {
   const anchor = document.createTextNode('');
+  const scope = getCurrentScope();
   queueMicrotask(() => {
     if (!anchor.parentNode) return;
-    renderCase(anchor.parentNode, anchor, subject, arms, ctx);
+    runInScope(scope, () => renderCase(anchor.parentNode!, anchor, subject, arms, ctx));
   });
   return anchor;
 }

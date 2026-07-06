@@ -1,5 +1,6 @@
 import { runWithObserver } from './observer.js';
 import { scheduleEffect } from './scheduler.js';
+import { onDispose } from './scope.js';
 
 export interface EffectOptions {
   scheduler?: (job: () => void) => void;
@@ -24,9 +25,12 @@ export function effect(fn: () => void | (() => void), opts: EffectOptions = {}):
     }
   };
   scheduled();
-  return () => {
+  const dispose = () => {
     disposed = true;
     cleanup?.();
     cleanup = undefined;
   };
+  // Auto-dispose with the active control-flow scope (if any).
+  onDispose(dispose);
+  return dispose;
 }

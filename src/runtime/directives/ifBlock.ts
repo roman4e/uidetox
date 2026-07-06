@@ -1,12 +1,6 @@
 import type { TemplateCtx } from '../component.js';
 import { effect } from '../effect.js';
-
-const FRAGMENT_NODE = 11; // Node.DOCUMENT_FRAGMENT_NODE
-
-/** The real nodes a factory produced (a fragment's children move out on insert). */
-function realNodes(node: Node): Node[] {
-  return node.nodeType === FRAGMENT_NODE ? Array.from(node.childNodes) : [node];
-}
+import { createScope, disposeScope, onDispose, runInScope, type Scope } from '../scope.js';
 
 export function renderIf(
   parent: Node,
@@ -16,21 +10,35 @@ export function renderIf(
   whenFalse: ((ctx: TemplateCtx) => Node) | null,
   ctx: TemplateCtx,
 ): void {
-  let currentNodes: Node[] = [];
-  let currentBranch: 'then' | 'else' | 'none' = 'none';
+  // A persistent end-marker bounds this region: teardown removes everything
+  // between `anchor` and `end`, so dynamically-inserted nested nodes (e.g. a
+  // child `<for>`'s rows) are removed too — not just the statically-mounted node.
+  const end = document.createTextNode('');
+  parent.insertBefore(end, anchor.nextSibling);
+
+  let branch: 'then' | 'else' | 'none' = 'none';
+  let scope: Scope | null = null;
+
+  const teardown = (): void => {
+    if (scope) { disposeScope(scope); scope = null; }
+    while (anchor.nextSibling && anchor.nextSibling !== end) {
+      parent.removeChild(anchor.nextSibling);
+    }
+  };
+  onDispose(teardown);
+
   effect(() => {
     const truthy = !!cond();
-    const nextBranch = truthy ? 'then' : whenFalse ? 'else' : 'none';
-    if (nextBranch === currentBranch) return;
-    // Remove the previously mounted branch — its actual DOM nodes, not the
-    // (now-empty) fragment they came from.
-    for (const n of currentNodes) n.parentNode?.removeChild(n);
-    currentNodes = [];
-    const node = nextBranch === 'then' ? whenTrue(ctx) : nextBranch === 'else' && whenFalse ? whenFalse(ctx) : null;
-    if (node) {
-      currentNodes = realNodes(node); // capture BEFORE insert empties a fragment
-      parent.insertBefore(node, anchor.nextSibling);
+    const next = truthy ? 'then' : whenFalse ? 'else' : 'none';
+    if (next === branch) return;
+    teardown();
+    if (next !== 'none') {
+      scope = createScope();
+      const factory = next === 'then' ? whenTrue : whenFalse!;
+      // Run the branch factory inside its scope so nested effects register here.
+      const node = runInScope(scope, () => factory(ctx));
+      parent.insertBefore(node, end);
     }
-    currentBranch = nextBranch;
+    branch = next;
   });
 }
