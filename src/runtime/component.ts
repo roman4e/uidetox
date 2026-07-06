@@ -68,6 +68,10 @@ export function defineComponent(options: ComponentOptions): void {
           this._props[name] = this.getAttribute(name);
         }
       }
+      // Route params set by a route handler — typed (coerced by paramsSchema),
+      // so they overwrite the string attribute values (REQ-18).
+      const routeParams = (this as unknown as { __uidetoxParams?: Record<string, unknown> }).__uidetoxParams;
+      if (routeParams) Object.assign(this._props, routeParams);
       // Capture light-DOM children present at connect — these are the slotted
       // content, projected into the template's <slot> after boot.
       const slotted: ChildNode[] = [];

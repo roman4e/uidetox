@@ -61,6 +61,18 @@ defineComponent({
   props: ${JSON.stringify(propNames)},
   boot${styleField}
 });
+
+export default (ctx) => {
+  const __el = document.createElement(${JSON.stringify(tag)});
+  if (ctx && ctx.params) {
+    __el.__uidetoxParams = ctx.params;
+    for (const __k in ctx.params) {
+      const __v = ctx.params[__k];
+      if (__v !== undefined && __v !== null) __el.setAttribute(__k, String(__v));
+    }
+  }
+  return __el;
+};
 `;
 
   return { js, tag };

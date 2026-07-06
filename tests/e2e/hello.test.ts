@@ -13,10 +13,10 @@ import { state } from '../../src/runtime/state.js';
  * inside happy-dom.
  */
 function evalCompiledModule(js: string): void {
-  const stripped = js.replace(
-    /^import\s*\{[^}]+\}\s*from\s*"uidetox";\s*\n?/m,
-    '',
-  );
+  const stripped = js
+    .replace(/^import\s*\{[^}]+\}\s*from\s*"uidetox";\s*\n?/m, '')
+    // strip the ESM `export default` (the route-handler factory) for new Function eval
+    .replace(/^export default /m, 'const __uidetoxDefault = ');
   const names = [
     'defineComponent',
     '__el',

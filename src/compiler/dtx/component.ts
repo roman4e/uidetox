@@ -75,7 +75,8 @@ export function emitComponent(decl: Declaration): string {
   bootLines.push('  return __tpl;');
 
   const styleField = style ? `,\n  style: ${sq(style.body ?? '')}` : '';
-  // Default export: a route/handler factory that instantiates the element.
+  // Default export: a route/handler factory that instantiates the element and
+  // reflects the matched route params (typed) onto it before boot (REQ-18).
   // Importing the module also registers the custom element (defineComponent side effect).
   return `${isExport ? 'export ' : ''}const ${decl.name} = defineComponent({
   tag: ${sq(tag)},
@@ -84,6 +85,16 @@ export function emitComponent(decl: Declaration): string {
 ${bootLines.join('\n')}
   }${styleField}
 });
-export default () => document.createElement(${sq(tag)});
+export default (ctx) => {
+  const __el = document.createElement(${sq(tag)});
+  if (ctx && ctx.params) {
+    __el.__uidetoxParams = ctx.params;
+    for (const __k in ctx.params) {
+      const __v = ctx.params[__k];
+      if (__v !== undefined && __v !== null) __el.setAttribute(__k, String(__v));
+    }
+  }
+  return __el;
+};
 `;
 }

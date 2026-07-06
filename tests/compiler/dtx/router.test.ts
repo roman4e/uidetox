@@ -120,6 +120,9 @@ end template
 end component
 `;
     const { code } = compileDtx(src);
-    expect(code).toContain('export default () => document.createElement("app-card");');
+    expect(code).toContain('export default (ctx) => {');
+    expect(code).toContain('document.createElement("app-card")');
+    expect(code).toContain('__el.__uidetoxParams = ctx.params;');
+    expect(code).toContain('__el.setAttribute(__k, String(__v));');
   });
 });
