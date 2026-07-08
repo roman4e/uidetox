@@ -15,3 +15,4 @@ consumers style them by tag + structural block, not by class soup.
 | 23 | [Cross-list sortable (Kanban board moves)](req-23-cross-list-sortable.md) | P1 |
 | 24 | [Typed CQRS command + resource helper](req-24-command-resource-helper.md) | P2 |
 | 25 | [`router`-verb .dtx shim types as RouteEntry[]](req-25-router-dtx-shim-type.md) | P2 |
+| 26 | [Generated dtx-shim invalid for `**` catch-all route](req-26-invalid-shim-catchall.md) | P1 |
