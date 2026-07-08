@@ -1,13 +1,8 @@
 import { runWithObserver } from './observer.js';
+import { idle as scheduleIdle } from './defer.js';
 
 export interface TaskOptions {
   idle?: boolean;
-}
-
-function scheduleIdle(fn: () => void): void {
-  const ric = (globalThis as { requestIdleCallback?: (cb: () => void) => number }).requestIdleCallback;
-  if (typeof ric === 'function') { ric(fn); return; }
-  setTimeout(fn, 0);
 }
 
 /**

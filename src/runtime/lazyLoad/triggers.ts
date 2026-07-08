@@ -1,3 +1,5 @@
+import { idle } from '../defer.js';
+
 export type TriggerName = 'visible' | 'eager' | 'interaction' | 'manual';
 
 export interface TriggerHandle {
@@ -47,7 +49,5 @@ export function attachTrigger(
 }
 
 export function schedulePrefetch(fn: () => void): void {
-  const ric = (globalThis as { requestIdleCallback?: (cb: () => void) => number }).requestIdleCallback;
-  if (typeof ric === 'function') { ric(fn); return; }
-  setTimeout(fn, 0);
+  idle(fn);
 }
