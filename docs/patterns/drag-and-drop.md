@@ -67,6 +67,25 @@ pointer-cancel, and tab-hide all cancel the drag and remove the ghost.
 can't drop into the list. Pairs naturally with a forms array field
 (`field.moveTo(from, to)`).
 
+### Grouped (cross-list) sortable
+
+Give lists a `:group` (and a `data-list` id) so items drag **between** them — a
+Kanban board move:
+
+```html
+<board-column use="sortable" :group=${'board'} data-list="todo" @sort-move=${(e) => move(e.detail)}>
+  <for each=${col.cards} item="card" key="card.id">
+    <artifact-card use="sortable-item" data-sort-id=${card.id}>…</artifact-card>
+  </for>
+</board-column>
+```
+
+- Same-list drop → `reorder` `{ from, to, id }` (unchanged).
+- Drop into another list of the same group → `sort-move`
+  `{ id, fromList, toList, fromIndex, toIndex }` on the **source** list;
+  `toIndex` is the insertion index in the destination.
+- A list without a group stays isolated (reorder-only).
+
 > Animated reflow (FLIP) on reorder is not wired yet — `anim`'s `flip` can be
 > layered on in a follow-up.
 
