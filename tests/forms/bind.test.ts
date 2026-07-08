@@ -62,14 +62,15 @@ describe('__bindField', () => {
 });
 
 describe('<field-error>', () => {
-  it('renders the first error and clears when fixed', () => {
+  it('renders the first error and clears when fixed', async () => {
     const fm = make();
     const el = document.createElement('field-error') as HTMLElement & { of: unknown };
     el.of = fm.field('name');
     document.body.appendChild(el);
     expect(el.textContent).toBeTruthy();
     fm.field('name').setValue('Ok');
-    flushSync();
+    await new Promise((r) => setTimeout(r, 0)); // validation settles off-tick
+    flushSync();                                 // field-error effect re-renders
     expect(el.textContent).toBe('');
     el.remove();
   });

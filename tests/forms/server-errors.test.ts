@@ -19,10 +19,11 @@ describe('applyServerErrors', () => {
     expect(fm.valid).toBe(false);
   });
 
-  it('clears a server error when its field is edited', () => {
+  it('clears a server error when its field is edited', async () => {
     const fm = make();
     fm.applyServerErrors({ fieldErrors: { email: ['already registered'] } });
     fm.field('email').setValue('new@x.c');
+    await new Promise((r) => setTimeout(r, 0)); // validation settles off-tick
     expect(fm.errors['email']).toBeUndefined();
     expect(fm.valid).toBe(true);
   });

@@ -1,5 +1,6 @@
 import { state } from '../runtime/state.js';
 import { effect } from '../runtime/effect.js';
+import { defer } from '../runtime/defer.js';
 import { type ErrorMap, Schema, ObjectSchema, ArraySchema } from './schema.js';
 import { getPath, setPath, parsePath } from './path.js';
 
@@ -145,12 +146,36 @@ export function form<T extends object>(config: FormConfig<T>): FormInstance<T> {
     }, debounce);
   }
 
+  // Heavy validation (full schema walk + whole-form serialize) is coalesced and
+  // run OFF the current tick, so rapid edits don't block input handling. State
+  // (errors/dirty/valid) settles a macrotask later; reactive subscribers re-render.
+  let validationScheduled = false;
+  const dirtyPaths = new Set<string>();
+
+  function runValidation(): void {
+    recomputeDirty();
+    revalidate();
+    for (const p of dirtyPaths) runAsync(p);
+    dirtyPaths.clear();
+  }
+
+  /** Force a synchronous validation pass, cancelling any pending deferred one. */
+  function validateNow(): void {
+    validationScheduled = false;
+    runValidation();
+  }
+
   function afterChange(path: string): void {
     // Editing a field dismisses any stale server error on it.
     if (serverErrors[path]) delete serverErrors[path];
-    recomputeDirty();
-    revalidate();
-    runAsync(path);
+    dirtyPaths.add(path);
+    if (validationScheduled) return;
+    validationScheduled = true;
+    defer(() => {
+      if (!validationScheduled) return; // superseded by a sync validateNow()
+      validationScheduled = false;
+      runValidation();
+    });
   }
 
   function field(path: string): FieldHandle {
@@ -219,7 +244,7 @@ export function form<T extends object>(config: FormConfig<T>): FormInstance<T> {
       ev?.preventDefault?.();
       meta.submitting = true;
       try {
-        revalidate();
+        validateNow(); // force a synchronous validation pass before submitting
         if (meta.valid && config.onSubmit) {
           await config.onSubmit(clone(values));
         }
@@ -237,8 +262,7 @@ export function form<T extends object>(config: FormConfig<T>): FormInstance<T> {
       for (const k of Object.keys(pending)) delete pending[k];
       for (const k of Object.keys(asyncErrors)) delete asyncErrors[k];
       for (const k of Object.keys(serverErrors)) delete serverErrors[k];
-      recomputeDirty();
-      revalidate();
+      validateNow(); // reset is an explicit action → settle state synchronously
     },
   };
 }

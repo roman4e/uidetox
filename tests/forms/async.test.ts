@@ -14,6 +14,7 @@ describe('async validators', () => {
       initial: { code: '' },
     });
     fm.field('code').setValue('TAKEN');
+    await tick();                                   // deferred validation runs → pending set
     expect(fm.field('code').pending).toBe(true);
     expect(fm.valid).toBe(false);
     await tick();
