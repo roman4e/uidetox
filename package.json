@@ -18,6 +18,7 @@
     "./forms": "./dist/forms/index.js",
     "./http": "./dist/http/index.js",
     "./i18n": "./dist/i18n/index.js",
+    "./ui": "./dist/ui/index.js",
     "./vite": "./dist/vite/index.js",
     "./compiler": "./dist/compiler/index.js"
   },

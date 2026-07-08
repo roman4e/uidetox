@@ -52,6 +52,8 @@ export function defineComponent(options: ComponentOptions): void {
     private _mounted = false;
     private _disposers: Array<() => void> = [];
     private _mountCleanup: (() => void) | undefined;
+    /** Authored light-DOM (slotted) content, restored on disconnect so a move re-projects it. */
+    private _slotted: ChildNode[] = [];
 
     connectedCallback(): void {
       if (this._mounted) return;
@@ -76,6 +78,7 @@ export function defineComponent(options: ComponentOptions): void {
       // content, projected into the template's <slot> after boot.
       const slotted: ChildNode[] = [];
       while (this.firstChild) { slotted.push(this.firstChild); this.removeChild(this.firstChild); }
+      this._slotted = slotted;
       const refs: Record<string, Element> = {};
       const ctx: TemplateCtx = {
         props: this._props,
@@ -116,12 +119,26 @@ export function defineComponent(options: ComponentOptions): void {
         setCleanupSink(null);
       }
       this.appendChild(node);
-      // Project slotted content into the template's default <slot> (light DOM).
-      // No <slot> → append at the end so content isn't lost.
+      // Project slotted content into the template's <slot>s (light DOM). Children
+      // with `slot="name"` go to the matching `<slot name="name">`, the rest to
+      // the default `<slot>`. No slot → append at the end so content isn't lost.
       if (slotted.length) {
-        const slot = this.querySelector('slot');
-        if (slot) slot.replaceWith(...slotted);
-        else for (const n of slotted) this.appendChild(n);
+        const slots = new Map<string, Element>();
+        for (const s of this.querySelectorAll('slot')) {
+          slots.set(s.getAttribute('name') ?? '', s);
+        }
+        if (slots.size === 0) {
+          for (const n of slotted) this.appendChild(n);
+        } else {
+          const defaultSlot = slots.get('');
+          for (const n of slotted) {
+            const name = n.nodeType === 1 ? ((n as Element).getAttribute('slot') ?? '') : '';
+            const target = slots.get(name) ?? defaultSlot;
+            if (target) target.parentNode?.insertBefore(n, target);
+            else this.appendChild(n);
+          }
+          for (const s of slots.values()) s.remove();
+        }
       }
       if (options.style) {
         const styleEl = document.createElement('style');
@@ -142,6 +159,9 @@ export function defineComponent(options: ComponentOptions): void {
       this._mountCleanup = undefined;
       this._mounted = false;
       while (this.firstChild) this.removeChild(this.firstChild);
+      // Restore authored (slotted) content so a move/reconnect re-projects it
+      // instead of re-booting empty (e.g. a kit component inside another's slot).
+      for (const n of this._slotted) this.appendChild(n);
     }
 
     attributeChangedCallback(name: string, _prev: string | null, next: string | null): void {
