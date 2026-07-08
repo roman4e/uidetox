@@ -104,3 +104,33 @@ try {
 
 `fm.applyServerErrors` merges `err.fieldErrors` into the form error map;
 each error clears when its field is next edited.
+
+## Commands (CQRS)
+
+`command()` dispatches a named write to a commands endpoint with idempotency and
+optimistic rollback — the write-side companion to `resource()`.
+
+```ts
+import { command } from 'uidetox/http';
+
+const reorder = command(
+  (a: { artifact: string; rank: string }) => ({
+    command: 'artifact.reorder',
+    payload: { artifact: `artifact:${a.artifact}`, rank: a.rank },
+  }),
+  {
+    client: api,                 // §18 http client → 401-refresh + ApiError
+    endpoint: '/api/commands',
+    idempotent: true,            // auto-mint idempotency_key (default)
+    optimistic: (a, patch) => { patch.prev = list.data; applyMove(a); },
+    rollback:   (_a, patch) => { list.data = patch.prev; },
+  },
+);
+
+await reorder.run({ artifact, rank });  // resolves on ack, rolls back + rejects on error
+reorder.pending;  // reactive — bind ?disabled=${reorder.pending}
+reorder.error;
+```
+
+Posts `{ command, payload, idempotency_key? }`. `optimistic` runs before the
+request (stash undo on `patch`), `rollback` on any failure.
