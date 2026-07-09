@@ -109,6 +109,11 @@ import Login from 'pages.Login';   // ✅ typed: (props?: Props) => HTMLElement
 
 Run the plugin once (dev or build) to (re)generate the file.
 
+A `router`-verb `.dtx` is typed as `RouteEntry[]` (not a component factory), so
+`defineRouter({ routes })` needs no cast. Route patterns (`**`, `:id`) never leak
+into the generated element interfaces, and a handler reused across routes yields
+one interface — the `.d.ts` is always valid TypeScript.
+
 ## CLI wrappers
 
 Thin launchers so a project's `package.json` needs no hand-written config:

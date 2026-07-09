@@ -255,6 +255,7 @@ Define either `boot` or `template`. `ctx` (the `TemplateCtx`):
 | `find(sel)` / `findAll(sel)` | `host.querySelector` / `querySelectorAll` |
 | `effect(fn)` | instance-scoped effect, **auto-disposed on unmount** |
 | `task(fn, opts?)` | instance-scoped task, auto-disposed (see §10) |
+| `onCleanup(fn)` | teardown run on disconnect (also importable from `uidetox`) |
 | `emit(name, detail?)` | dispatch a bubbling+composed `CustomEvent` from the host |
 | `registry` | the global DI registry (§12) |
 
