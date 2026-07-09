@@ -8,7 +8,16 @@ export function setCleanupSink(next: Array<() => void> | null): void {
   sink = next;
 }
 
-/** Registers a teardown callback with the current component instance, if any. */
+/**
+ * Registers a teardown callback that runs when the current component instance
+ * disconnects. Call it during `script`/`boot`. Register several — they run in
+ * registration order. A no-op (with a warning) when called outside a component.
+ */
 export function onCleanup(fn: () => void): void {
-  sink?.push(fn);
+  if (!sink) {
+    // eslint-disable-next-line no-console
+    console.warn('[uidetox] onCleanup() called outside a component boot — ignored.');
+    return;
+  }
+  sink.push(fn);
 }

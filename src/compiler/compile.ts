@@ -51,7 +51,7 @@ export function compile(source: string): { js: string; tag: string } {
   const js = `${RUNTIME_IMPORTS}
 
 function boot(ctx) {
-  const { props, host, refs, ref, find, findAll, effect, emit, registry, task } = ctx;
+  const { props, host, refs, ref, find, findAll, effect, emit, registry, task, onCleanup } = ctx;
 ${script?.content ?? ''}
   return ${templateBody};
 }

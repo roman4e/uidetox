@@ -16,6 +16,8 @@ export interface TemplateCtx {
   effect: (fn: () => void | (() => void)) => () => void;
   /** Detached async reactive task — auto-disposed on disconnect. */
   task: (fn: (signal: AbortSignal) => void | Promise<void>, opts?: TaskOptions) => () => void;
+  /** Register teardown to run when this component disconnects (REQ-27). */
+  onCleanup: (fn: () => void) => void;
   /** Dispatch a bubbling composed CustomEvent from the host. */
   emit: (name: string, detail?: unknown) => void;
   /** The global hierarchical Registry. */
@@ -97,6 +99,7 @@ export function defineComponent(options: ComponentOptions): void {
           this._disposers.push(dispose);
           return dispose;
         },
+        onCleanup: (fn) => { this._disposers.push(fn); },
         emit: (name, detail) => {
           this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
         },

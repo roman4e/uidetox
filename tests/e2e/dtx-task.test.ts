@@ -26,7 +26,7 @@ end component
     expect(code).toContain('task(async (signal) => {');
     expect(code).toContain('const q = filter.q;');
     expect(code).toContain('signal.aborted');
-    expect(code).toContain('const { props, host, refs, ref, find, findAll, effect, emit, registry, task } = ctx;');
+    expect(code).toContain('const { props, host, refs, ref, find, findAll, effect, emit, registry, task, onCleanup } = ctx;');
   });
 
   it('honours the idle modifier', () => {

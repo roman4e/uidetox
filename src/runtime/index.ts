@@ -6,6 +6,7 @@ export { defineComponent } from './component.js';
 export { task } from './task.js';
 export type { TaskOptions } from './task.js';
 export { defer, idle } from './defer.js';
+export { onCleanup } from './lifecycle.js';
 export {
   CASE_DEFAULT,
   __bind,

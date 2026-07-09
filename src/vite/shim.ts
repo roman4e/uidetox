@@ -113,10 +113,22 @@ export interface ElementInterface {
   decl: string;
 }
 
+/** A valid custom-element tag: lowercase, at least one hyphen (`**`, `//`, `:id` are not). */
+function isCustomElementName(tag: string): boolean {
+  return /^[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/.test(tag);
+}
+
+/** True when the source declares a top-level `router` verb. */
+export function isRouterSource(source: string): boolean {
+  return /^\s*router\s+\S+/m.test(source);
+}
+
 /** Builds a per-component element interface exposing `actions` as host methods (§9.4). */
 export function generateElementInterface(id: string, source: string): ElementInterface | null {
   const tag = extractTag(id, source);
-  if (!tag) return null;
+  // Guard against non-element tags (route patterns like `**`/`:id`) producing
+  // garbage TS interfaces (REQ-26).
+  if (!tag || !isCustomElementName(tag)) return null;
   const name = `${pascal(tag)}Element`;
   const methods = actionSignatures(source).map((s) => `  ${s};`);
   const body = methods.length ? `\n${methods.join('\n')}\n` : '';
@@ -130,6 +142,17 @@ export function generateElementInterface(id: string, source: string): ElementInt
 
 /** Returns TypeScript declarations for the component in `source` (id decides format). */
 export function generateTsShim(id: string, source: string, opts: { ambient?: boolean } = {}): string {
+  // A `router`-verb .dtx default-exports a RouteEntry[] (REQ-25), not a component.
+  if (id.endsWith('.dtx') && isRouterSource(source)) {
+    const constKw = opts.ambient ? 'const' : 'declare const';
+    return [
+      '// AUTO-GENERATED shim for a UIDetox router. Do not edit.',
+      'import type { RouteEntry } from "uidetox";',
+      `${constKw} _default: RouteEntry[];`,
+      'export default _default;',
+      '',
+    ].join('\n');
+  }
   let propsDecl: string;
   if (id.endsWith('.md')) {
     const t = mdPropsType(source);
