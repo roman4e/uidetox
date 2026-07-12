@@ -240,8 +240,41 @@ import uidetox from 'uidetox/vite';
 export default { plugins: [uidetox()] };
 ```
 
-## Docs
+## Documentation
 
 - **[REFERENCE.md](docs/REFERENCE.md)** — the full manual, every feature with examples.
-- **[docs/patterns/](docs/patterns/)** — deep dives: forms, http, router/navigation,
-  virtual-for, drag & drop, i18n, ui-kit, islands, vite-plugin.
+
+Deep-dive guides in [`docs/patterns/`](docs/patterns/):
+
+| Guide | Topic |
+|---|---|
+| [forms.md](docs/patterns/forms.md) | schema DSL, `form()`, `bind=`, validation |
+| [http.md](docs/patterns/http.md) | HTTP client, `resource`, `mutation`, `command`, OpenAPI |
+| [navigation.md](docs/patterns/navigation.md) | router, `navigate()`, `<a data-nav>`, `routeState()` |
+| [virtual-for.md](docs/patterns/virtual-for.md) | windowed list rendering |
+| [drag-and-drop.md](docs/patterns/drag-and-drop.md) | draggable / droppable / sortable traits |
+| [i18n.md](docs/patterns/i18n.md) | locale-aware number / date / unit formatting |
+| [ui-kit.md](docs/patterns/ui-kit.md) | Semantic-UI primitive components |
+| [shallow-batch.md](docs/patterns/shallow-batch.md) | `shallow()`, `batch()`, `untrack()` |
+| [island-wrapper.md](docs/patterns/island-wrapper.md) | wrapping imperative libraries (canvas, maps) |
+| [vite-plugin.md](docs/patterns/vite-plugin.md) | `uidetox/vite` — load `.dtx`/`.md`, HMR, TS shims |
+
+## Examples
+
+Runnable examples in [`examples/`](examples/):
+
+| Example | Shows |
+|---|---|
+| [hello/](examples/hello/) | minimal Markdown SFC (`App.md`) |
+| [todo/](examples/todo/) | SFC with colocated test blocks (`Todo.md`) |
+| [dsl/](examples/dsl/) | `.dtx` components, traits, filters |
+| [forms/](examples/forms/) | `IngredientForm.dtx` — schema + `bind=` + arrays |
+| [virtual/](examples/virtual/) | `IngredientList.dtx` — `viewport="virtual"` |
+| [dnd/](examples/dnd/) | `Palette.dtx` — draggable → droppable canvas |
+| [island/](examples/island/) | `CanvasClock` — imperative canvas island |
+| [island-cytoscape/](examples/island-cytoscape/) | `GraphEditor` — canvas-graph island (props↔lib, emits, drop) |
+| [routing/](examples/routing/) | file-based routes |
+| [include/](examples/include/) | `<include>` partials |
+| [showcase/](examples/showcase/) | traits + filters + docs page |
+| [culinary-lite/](examples/culinary-lite/) | full Vite app: router, layout, pages, `detox.toml` |
+| [vitest-setup/](examples/vitest-setup/) | Vitest recipe with `uidetoxEsbuild` |
