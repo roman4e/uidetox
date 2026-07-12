@@ -3,3 +3,8 @@ dist
 .uidetox
 *.log
 .uidetox/
+
+# Consumer feature-request docs — never committed (local only)
+docs/culinary-requests/
+docs/req-*/
+docs/*-requests/
