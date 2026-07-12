@@ -128,13 +128,41 @@ leaving no `<div>` scaffolding.
 </case>
 ```
 
-Long lists? Flip one attribute to windowed rendering — bounded DOM at any length:
+---
+
+## Windowed lists — 10 000 rows, ~15 DOM nodes
+
+Rendering a long list kills scrolling. UIDetox virtualizes it by flipping **one
+attribute** on `<for>` — same loop, same `key`, now it renders only the visible
+slice plus a small overscan and recycles rows as you scroll. DOM node count stays
+bounded no matter how long the array grows.
 
 ```html
-<for each=${rows} item="r" key="r.id" viewport="virtual" row-height="48" overscan="6">
-  <ingredient-row data=${r}/>
+<for each=${ingredients}          <!-- 8 000 items -->
+     item="ing" key="ing.id"
+     viewport="virtual"           <!-- ← turns on windowing -->
+     row-height="48"
+     overscan="6">
+  <ingredient-row data=${ing}/>
 </for>
 ```
+
+```
+plain <for>          →  8 000 <ingredient-row> in the DOM, janky scroll
+<for viewport=…>     →  ~15 in the DOM, smooth at any length
+```
+
+- **Keyed reconcile** — a row with the same `key` keeps its DOM node across scroll,
+  so focus, inputs and selection survive.
+- **Bounded**: `(visible + 2·overscan)` rows, whatever `each.length` is; total
+  scroll height is preserved via a spacer.
+- **Scroll API**: grab the element with a `#ref` → `el.scrollToKey('ing-42')`,
+  `el.scrollToIndex(1000)`.
+- Works when the element itself scrolls or an ancestor does (`scroll-parent`), and
+  inside `<select>` / `<table>`. `<virtual-for>` is an alias for the same thing.
+
+Full guide: **[docs/patterns/virtual-for.md](docs/patterns/virtual-for.md)** ·
+example: **[examples/virtual/IngredientList.dtx](examples/virtual/IngredientList.dtx)**.
 
 ---
 
