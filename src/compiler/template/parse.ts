@@ -134,12 +134,57 @@ interface P5Element {
 // Control-flow tags that the HTML5 parser would strip inside <select>/<table>/….
 // Rewrite them to <template data-uidx="<tag>"> before parsing (parse5 keeps
 // <template> anywhere), then reconstruct the original element in `convert`.
-const CONTROL_FLOW_TAGS = 'virtual-for|for|if|else|case|when';
+const CONTROL_FLOW_TAGS = 'virtual-for|for|if|case|when|else';
+const CF_OPEN_RE = new RegExp(`^<(${CONTROL_FLOW_TAGS})(\\s|>)`);
+const CF_CLOSE_RE = new RegExp(`^</(${CONTROL_FLOW_TAGS})>`);
 
+/**
+ * Rewrites `<if>/<for>/<case>/<when>/<else>` to `<template data-uidx>` while
+ * giving `<else>` HTML `<li>`-style implicit closing: a bare `<else>` (the
+ * author writes no `</else>`) is a CONTAINER whose scope runs to the enclosing
+ * `</if>`/`</case>`. We inject that missing close so `</if>` closes the `<if>`
+ * — not the `<else>` — otherwise the `<if>` template stays open and swallows the
+ * following siblings (e.g. a later `<if>`) into its content (REQ-06). A stack is
+ * needed (not a regex) so the `</template>` for the else lands at the right depth
+ * under arbitrary nesting; an explicit `</else>` (e.g. inside `<case>`) still
+ * closes normally.
+ */
 function rewriteControlFlow(source: string): string {
-  return source
-    .replace(new RegExp(`<(${CONTROL_FLOW_TAGS})(\\s|>)`, 'g'), '<template data-uidx="$1"$2')
-    .replace(new RegExp(`</(${CONTROL_FLOW_TAGS})>`, 'g'), '</template>');
+  let out = '';
+  let i = 0;
+  const stack: Array<{ tag: string; elseOpen: boolean }> = [];
+  while (i < source.length) {
+    if (source[i] === '<') {
+      const rest = source.slice(i);
+      const open = CF_OPEN_RE.exec(rest);
+      if (open) {
+        const tag = open[1];
+        out += `<template data-uidx="${tag}"${open[2]}`;
+        if (tag === 'else') {
+          if (stack.length) stack[stack.length - 1].elseOpen = true;
+        } else {
+          stack.push({ tag, elseOpen: false });
+        }
+        i += open[0].length;
+        continue;
+      }
+      const close = CF_CLOSE_RE.exec(rest);
+      if (close) {
+        if (close[1] === 'else') {
+          if (stack.length) stack[stack.length - 1].elseOpen = false;
+        } else {
+          const frame = stack.pop();
+          if (frame?.elseOpen) out += '</template>'; // implicitly close the bare <else>
+        }
+        out += '</template>';
+        i += close[0].length;
+        continue;
+      }
+    }
+    out += source[i];
+    i++;
+  }
+  return out;
 }
 
 function camelize(name: string): string {
