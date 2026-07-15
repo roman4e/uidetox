@@ -327,6 +327,34 @@ function addTemplateHelpers(needed: Set<string>): void {
   }
 }
 
+// Module-level reactivity primitives (NOT provided via ctx — those are effect/emit/
+// task/onCleanup/readFrame). Auto-imported when a body calls one but the author
+// didn't import it, so a `script` using `state(...)` doesn't throw
+// `ReferenceError: state is not defined` at boot (which renders the component empty
+// and reads as a template/reactivity bug). Skipped when the author already imports
+// the name, so no duplicate binding.
+const AUTO_IMPORT_PRIMITIVES = [
+  'state', 'derived', 'batch', 'shallow', 'untrack', 'untracked', 'defer', 'idle',
+];
+
+function collectBoundImportNames(ast: DtxAst): Set<string> {
+  const names = new Set<string>();
+  for (const imp of ast.imports) {
+    if (imp.namespace) names.add(imp.namespace);
+    for (const it of imp.items) names.add(kebabToCamel(it.alias ?? it.source));
+  }
+  return names;
+}
+
+function collectBodyText(ast: DtxAst): string {
+  const parts: string[] = [];
+  for (const decl of ast.declarations) {
+    for (const m of decl.members ?? []) if (m.body) parts.push(m.body);
+  }
+  for (const d of ast.declares ?? []) if (d.body) parts.push(d.body);
+  return parts.join('\n');
+}
+
 function collectImports(ast: DtxAst): Set<string> {
   const needed = new Set<string>();
   for (const decl of ast.declarations) {
@@ -341,6 +369,13 @@ function collectImports(ast: DtxAst): Set<string> {
   }
   for (const d of ast.declares ?? []) {
     if (d.kind === 'tpl' || d.kind === 'template') addTemplateHelpers(needed);
+  }
+  // Auto-import used-but-unimported reactivity primitives (dedup vs author imports).
+  const bound = collectBoundImportNames(ast);
+  const body = collectBodyText(ast);
+  for (const name of AUTO_IMPORT_PRIMITIVES) {
+    if (bound.has(name)) continue;
+    if (new RegExp(`\\b${name}\\s*\\(`).test(body)) needed.add(name);
   }
   return needed;
 }
