@@ -51,6 +51,16 @@ export function batch<T>(fn: () => T): T {
   }
 }
 
+// Only plain objects and arrays are deep-wrapped. Native/exotic objects
+// (DOMRect, Map, Set, Date, DOM nodes, class instances) are returned as-is —
+// wrapping them in a Proxy breaks internal-slot getters (`rect.left` → undefined)
+// and identity (REQ-07).
+function isReactiveTarget(v: object): boolean {
+  if (Array.isArray(v)) return true;
+  const proto = Object.getPrototypeOf(v);
+  return proto === Object.prototype || proto === null;
+}
+
 export function state<T extends object>(obj: T): T {
   const existing = proxies.get(obj);
   if (existing) return existing as T;
@@ -58,7 +68,7 @@ export function state<T extends object>(obj: T): T {
     get(target, key, receiver) {
       track(target, key);
       const value = Reflect.get(target, key, receiver);
-      return value !== null && typeof value === 'object'
+      return value !== null && typeof value === 'object' && isReactiveTarget(value as object)
         ? state(value as object)
         : value;
     },

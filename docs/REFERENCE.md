@@ -391,6 +391,25 @@ Section semantics: `script` = private boot statements; `actions` = each
 template is built (refs populated); `style scoped` detects `scoped` on the header;
 `task` / `task idle` wraps the body as `task(async (signal) => { … })`.
 
+`effect(…)` inside `effects` (or `script`) **creates a reactive subscription** —
+it re-runs whenever a signal or prop it read changes. Use it to react to a prop
+that arrives *after* boot (e.g. measure + position against a `.prop`-bound
+`anchor` set by the parent later):
+
+```
+effects
+effect(() => {
+  if (props.anchor && refs.pop) readFrame(() => place(props.anchor));
+});
+end effects
+```
+
+The effect re-runs when `props.anchor` is set, and `readFrame(fn)` runs `fn`
+after the next DOM commit — no `requestAnimationFrame` retry loop needed. Pass
+**plain data** through `.prop` (numbers/objects), not platform objects whose
+getters rely on internal slots — a `DOMRect` passes through fine now, but a plain
+`{ left, top, width, height }` is the safest contract.
+
 `declare <kind> <name> … end <kind>` defines a reusable fragment (`tpl`, `style`,
 `props`, `script`, `actions`, `effects`).
 
