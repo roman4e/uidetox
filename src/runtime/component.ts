@@ -71,6 +71,14 @@ export function defineComponent(options: ComponentOptions): void {
         if (this.hasAttribute(name)) {
           this._props[name] = this.getAttribute(name);
         }
+        // Reflect a property assigned before upgrade (own prop shadowing the
+        // accessor) into reactive _props — object/array/function props survive.
+        if (Object.prototype.hasOwnProperty.call(this, name)) {
+          const bag = this as unknown as Record<string, unknown>;
+          const v = bag[name];
+          delete bag[name];
+          bag[name] = v; // through the accessor → _props (typed value wins over attr)
+        }
       }
       // Route params set by a route handler — typed (coerced by paramsSchema),
       // so they overwrite the string attribute values (REQ-18).
@@ -170,6 +178,22 @@ export function defineComponent(options: ComponentOptions): void {
     attributeChangedCallback(name: string, _prev: string | null, next: string | null): void {
       this._props[name] = next;
     }
+  }
+
+  // Bridge declared props to reactive _props: a `.prop=${obj}` binding (or a plain
+  // `el.prop = obj`) writes through the accessor into the reactive proxy, so the
+  // child reads it via `ctx.props.prop` and re-renders on change (REQ-05 / REQ-28).
+  for (const name of observedAttrs) {
+    Object.defineProperty(UiElement.prototype, name, {
+      configurable: true,
+      enumerable: true,
+      get(this: UiElement): unknown {
+        return (this as unknown as { _props: Record<string, unknown> })._props[name];
+      },
+      set(this: UiElement, v: unknown): void {
+        (this as unknown as { _props: Record<string, unknown> })._props[name] = v;
+      },
+    });
   }
 
   customElements.define(options.tag, UiElement);

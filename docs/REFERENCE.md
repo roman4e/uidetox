@@ -516,9 +516,33 @@ static. Quotes around the expression are optional (`@click=${fn}` ≡
 |---|---|---|
 | `x=${e}` | expression | `setAttribute('x', e)` (removed when `false`/`null`/`undefined`) |
 | `@click=${fn}` | event | `addEventListener('click', fn)` |
-| `.prop=${e}` | property | assigns DOM property |
+| `.prop=${e}` | property | assigns DOM property → child's reactive `ctx.props` |
 | `?disabled=${e}` | boolean | toggles boolean attribute |
 | `class="x"` | static | literal |
+
+**Passing object/array props.** Attributes stringify (`x=${obj}` → `"[object
+Object]"`) — for structured data use the **property** binding `.prop=${obj}`. A
+declared prop (`props: [...]` / a `props` section) gets a generated accessor that
+writes the value into the child's reactive `_props`, so the child reads it as
+`ctx.props.<prop>` and re-renders when the parent updates it:
+
+```html
+<!-- parent -->
+<lad-single .item=${s.item} .palette=${s.palette}></lad-single>
+```
+```
+component LadSingle tag lad-single
+props
+object item
+object palette
+end props
+template
+<span>${props.item.word}</span>     <!-- reactive: updates when s.item changes -->
+end template
+end component
+```
+
+Object identity, `DOMRect`, and functions all survive (no JSON round-trip).
 
 **Element refs** → `ctx.refs` / `ctx.ref(name)` (also `ctx.find` / `ctx.findAll`).
 Keys are camel-cased. Resolution:
