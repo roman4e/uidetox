@@ -299,7 +299,7 @@ export const apiToken   = registryKey<ApiClient>('api');
 ### 7.3 Provide (bootstrap)
 
 ```ts
-import { registry } from 'uidetox';
+import { registry } from 'ui-detox';
 
 registry.provide(themeToken, () => currentTheme);
 registry.provide(userToken,  () => authService.user);
@@ -325,7 +325,7 @@ Resolution order: local → module → global. First match wins.
 
 ### 8.1 Model
 
-Each module or plugin owns a `routes.md` file. Routes are declared explicitly using `<Router>` and `<Route>` tags. The compiler aggregates all `routes.md` files at build time into a single generated route table cached under `.uidetox/cache/routes.gen.ts`.
+Each module or plugin owns a `routes.md` file. Routes are declared explicitly using `<Router>` and `<Route>` tags. The compiler aggregates all `routes.md` files at build time into a single generated route table cached under `.ui-detox/cache/routes.gen.ts`.
 
 ### 8.2 `routes.md` example
 
@@ -365,7 +365,7 @@ priority: 100
 
 ### 8.6 Build-time aggregation
 
-The compiler scans every `routes.md` under `pages/`, `plugins/*/`, and the top-level project. It emits `.uidetox/cache/routes.gen.ts`. Hot-reload regenerates on change.
+The compiler scans every `routes.md` under `pages/`, `plugins/*/`, and the top-level project. It emits `.ui-detox/cache/routes.gen.ts`. Hot-reload regenerates on change.
 
 ## 9. Rendering Strategy
 

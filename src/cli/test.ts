@@ -18,7 +18,7 @@ export interface TestOptions {
 }
 
 export async function runTest(options: TestOptions): Promise<{ passed: number; failed: number; report: string }> {
-  const cacheDir = options.cacheDir ?? join(options.inputDir, '..', '.uidetox', 'test-cache');
+  const cacheDir = options.cacheDir ?? join(options.inputDir, '..', '.ui-detox', 'test-cache');
   const snapshotsDir = options.snapshotsDir ?? join(options.inputDir, '..', 'snapshots');
   const filter = options.filter ? new RegExp(options.filter) : null;
   const discovered = await discover(options.inputDir, cacheDir);
@@ -43,7 +43,7 @@ export async function runTest(options: TestOptions): Promise<{ passed: number; f
 
 const program = new Command();
 program
-  .name('uidetox')
+  .name('ui-detox')
   .command('test <inputDir>')
   .option('-o, --out <dir>', 'Cache directory for compiled test modules')
   .option('-s, --snapshots <dir>', 'Directory to read/write baselines')

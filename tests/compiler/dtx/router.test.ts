@@ -88,7 +88,7 @@ end router
 import Dashboard from "pages.Dashboard"
 import AppShell from "layouts.AppShell"
 import requireAuth from "lib.auth-guard"
-import form, f from "uidetox/forms"
+import form, f from "ui-detox/forms"
 
 router AppRoutes export
 routes
@@ -108,7 +108,7 @@ end router
     // NOT named
     expect(code).not.toMatch(/import\s*\{\s*Login\s*\}\s*from/);
     // unrelated named imports stay named
-    expect(code).toContain('import { form, f } from "uidetox/forms";');
+    expect(code).toContain('import { form, f } from "ui-detox/forms";');
     expect(code).toContain('handler: Login');
   });
 

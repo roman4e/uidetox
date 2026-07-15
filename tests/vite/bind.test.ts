@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { compileModule } from '../../src/vite/compile.js';
 
-const DTX = `import form, f from "uidetox/forms"
+const DTX = `import form, f from "ui-detox/forms"
 
 component LoginForm tag login-form
 
@@ -30,7 +30,7 @@ describe('bind=${fm.field(...)} in .dtx (§11.5)', () => {
   });
 
   it('imports __bindField from the runtime', () => {
-    expect(code).toContain('import { __bindField } from "uidetox";');
+    expect(code).toContain('import { __bindField } from "ui-detox";');
   });
 
   it('passes the field object (not its stringified value) to __bindField', () => {

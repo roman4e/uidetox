@@ -13,8 +13,8 @@ const HAPPY_DOM_ENTRY = require.resolve('happy-dom');
 
 function rewriteImports(src: string): string {
   return src
-    .replace(/from ["']uidetox\/testing["']/g, `from "${TESTING_PATH}"`)
-    .replace(/from ["']uidetox["']/g, `from "${RUNTIME_PATH}"`);
+    .replace(/from ["']ui-detox\/testing["']/g, `from "${TESTING_PATH}"`)
+    .replace(/from ["']ui-detox["']/g, `from "${RUNTIME_PATH}"`);
 }
 
 const HARNESS_TEMPLATE = (stagedPath: string, componentDir: string, updateMode: boolean) => `

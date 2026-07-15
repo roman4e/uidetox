@@ -4,7 +4,7 @@ import { transformDirectives } from './template/transform.js';
 import { codegen } from './template/codegen.js';
 
 const RUNTIME_IMPORTS =
-  'import { defineComponent, __el, __text, __bind, __bindField, __if, __for, __virtualFor, __case, __ref, __fragment, CASE_DEFAULT } from "uidetox";';
+  'import { defineComponent, __el, __text, __bind, __bindField, __if, __for, __virtualFor, __case, __ref, __fragment, CASE_DEFAULT } from "ui-detox";';
 
 const PROP_TOKEN = /(?:^|[;,\n])\s*(\w+)\s*[?:]/g;
 

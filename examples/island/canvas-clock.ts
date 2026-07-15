@@ -1,4 +1,4 @@
-import { defineComponent } from 'uidetox';
+import { defineComponent } from 'ui-detox';
 
 /**
  * Hand-written island wrapper equivalent to CanvasClock.md, showing the

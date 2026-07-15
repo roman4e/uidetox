@@ -50,10 +50,10 @@ describe('buildShimsFile', () => {
 });
 
 describe('core.writeShims', () => {
-  it('writes .uidetox/dtx-shims.d.ts', () => {
+  it('writes .ui-detox/dtx-shims.d.ts', () => {
     const core = createUidetoxCore({ root: projectRoot });
     const out = core.writeShims();
-    expect(out).toBe(join(projectRoot, '.uidetox', 'dtx-shims.d.ts'));
+    expect(out).toBe(join(projectRoot, '.ui-detox', 'dtx-shims.d.ts'));
     expect(readFileSync(out, 'utf8')).toContain('declare module "pages.Login"');
   });
 });

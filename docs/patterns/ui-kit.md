@@ -1,12 +1,12 @@
-# Pattern: Semantic-UI primitive kit (`uidetox/ui`)
+# Pattern: Semantic-UI primitive kit (`ui-detox/ui`)
 
 Real custom-element primitives — View Source shows `<ui-card>`, so you style by
 **tag + structural block**, never by utility classes. Importing the module
 registers all tags:
 
 ```ts
-import 'uidetox/ui';          // registers ui-button, ui-card, … (side-effect)
-// or: import { registerUi } from 'uidetox/ui'; registerUi();
+import 'ui-detox/ui';          // registers ui-button, ui-card, … (side-effect)
+// or: import { registerUi } from 'ui-detox/ui'; registerUi();
 ```
 
 Zero baked-in colour — every component derives from CSS custom properties with

@@ -9,7 +9,7 @@ interceptor).
 Programmatic navigation from anywhere — e.g. a component's `actions`:
 
 ```ts
-import { navigate } from 'uidetox';
+import { navigate } from 'ui-detox';
 
 function openRecipe(id: string) {
   navigate(`/recipes/${id}`);        // SPA transition, no reload
@@ -41,7 +41,7 @@ Read its fields in an effect to react to navigation — e.g. a `KitchenMode`
 island starting/stopping work as it becomes active:
 
 ```ts
-import { routeState } from 'uidetox';
+import { routeState } from 'ui-detox';
 
 ctx.effect(() => {
   const active = routeState().path === '/kitchen/:id';

@@ -2,13 +2,13 @@
 
 **Status:** In progress
 **Priority:** P0 (Culinary blocker)
-**Sub-path:** `uidetox/forms`
+**Sub-path:** `ui-detox/forms`
 **Decisions:** fluent schema DSL, dotted/bracketed path strings, dependency-free (own validator).
 
 ## 1. Schema DSL (fluent)
 
 ```ts
-import { f } from 'uidetox/forms';
+import { f } from 'ui-detox/forms';
 
 f.string().min(2).max(200).optional()
 f.number().int().positive().optional()
@@ -70,7 +70,7 @@ src/forms/
   form.ts          # form() store + field handles
   bind.ts          # __bindField runtime helper
   components.ts    # field-error + array-field custom elements
-  index.ts         # barrel (uidetox/forms)
+  index.ts         # barrel (ui-detox/forms)
 tests/forms/*.test.ts
 examples/forms/ingredient.md
 ```

@@ -147,7 +147,7 @@ export function generateTsShim(id: string, source: string, opts: { ambient?: boo
     const constKw = opts.ambient ? 'const' : 'declare const';
     return [
       '// AUTO-GENERATED shim for a UIDetox router. Do not edit.',
-      'import type { RouteEntry } from "uidetox";',
+      'import type { RouteEntry } from "ui-detox";',
       `${constKw} _default: RouteEntry[];`,
       'export default _default;',
       '',

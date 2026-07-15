@@ -1,5 +1,5 @@
-import { Redirect } from 'uidetox';
-import type { NavigationContext } from 'uidetox';
+import { Redirect } from 'ui-detox';
+import type { NavigationContext } from 'ui-detox';
 
 // A route guard: allow through when authenticated, else redirect to /login.
 export default function requireAuth(_ctx: NavigationContext): boolean | Redirect {

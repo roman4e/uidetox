@@ -16,7 +16,7 @@ export function setCleanupSink(next: Array<() => void> | null): void {
 export function onCleanup(fn: () => void): void {
   if (!sink) {
     // eslint-disable-next-line no-console
-    console.warn('[uidetox] onCleanup() called outside a component boot — ignored.');
+    console.warn('[ui-detox] onCleanup() called outside a component boot — ignored.');
     return;
   }
   sink.push(fn);

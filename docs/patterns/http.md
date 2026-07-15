@@ -1,13 +1,13 @@
 # Pattern: HTTP client + typed API layer
 
-`uidetox/http` provides a typed HTTP client, a reactive `resource()`, and a
-`mutation()` helper. `uidetox openapi` generates a fully-typed client from a
+`ui-detox/http` provides a typed HTTP client, a reactive `resource()`, and a
+`mutation()` helper. `ui-detox openapi` generates a fully-typed client from a
 FastAPI/OpenAPI 3.1 document. No runtime dependencies.
 
 ## Codegen
 
 ```
-uidetox openapi --input ./openapi.json --output ./src/generated/api.ts
+ui-detox openapi --input ./openapi.json --output ./src/generated/api.ts
 ```
 
 Produces named types from `components.schemas`, an `ApiClient` interface with
@@ -15,7 +15,7 @@ methods grouped by tag, and a `createClient(baseUrl, opts)` factory:
 
 ```ts
 import { createClient } from './generated/api';
-import { registry, createToken } from 'uidetox';
+import { registry, createToken } from 'ui-detox';
 
 export const apiToken = createToken<ReturnType<typeof createClient>>('api');
 
@@ -50,7 +50,7 @@ registry.provide(apiToken, api);
 ## Reactive resource
 
 ```ts
-import { resource } from 'uidetox/http';
+import { resource } from 'ui-detox/http';
 
 const query = state({ text: '', category: null });
 const list = resource(
@@ -77,7 +77,7 @@ each run, and **auto-aborts when the host component disconnects**.
 ## Mutations (optimistic + rollback)
 
 ```ts
-import { mutation } from 'uidetox/http';
+import { mutation } from 'ui-detox/http';
 
 const patch = mutation(
   (id: string, body: Partial<Ingredient>) => api.ingredients.update({ path: { id }, body }),
@@ -111,7 +111,7 @@ each error clears when its field is next edited.
 optimistic rollback — the write-side companion to `resource()`.
 
 ```ts
-import { command } from 'uidetox/http';
+import { command } from 'ui-detox/http';
 
 const reorder = command(
   (a: { artifact: string; rank: string }) => ({

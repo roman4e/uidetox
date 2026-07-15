@@ -22,8 +22,8 @@ describe('dtx import syntax', () => {
   });
 
   it('a specifier containing "/" is passed through verbatim (npm/explicit)', () => {
-    const { code } = compileDtx('import form, f from "uidetox/forms"\n');
-    expect(code).toContain('import { form, f } from "uidetox/forms";');
+    const { code } = compileDtx('import form, f from "ui-detox/forms"\n');
+    expect(code).toContain('import { form, f } from "ui-detox/forms";');
   });
 
   it('side-effect import of a dotted local ref resolves to a compiled path', () => {
@@ -32,17 +32,17 @@ describe('dtx import syntax', () => {
   });
 
   it('leaves a bare npm specifier verbatim (REQ-14.1)', () => {
-    const { code } = compileDtx('import registry from "uidetox"\nimport authToken from "tokens"\n');
-    expect(code).toContain('import { registry } from "uidetox";');   // bare npm, not ./uidetox.js
+    const { code } = compileDtx('import registry from "ui-detox"\nimport authToken from "tokens"\n');
+    expect(code).toContain('import { registry } from "ui-detox";');   // bare npm, not ./uidetox.js
     // `tokens` has no on-disk match without baseDir → treated as bare (bundler resolves)
     expect(code).toContain('import { authToken } from "tokens";');
   });
 
   it('emits all strings in double quotes', () => {
     const { code } = compileDtx('component AppCard tag app-card\ntemplate\n<div class="card"><slot/></div>\nend template\nend component\n');
-    expect(code).toContain('import { defineComponent } from "uidetox";');
+    expect(code).toContain('import { defineComponent } from "ui-detox";');
     expect(code).toContain('tag: "app-card"');
-    expect(code).not.toMatch(/from 'uidetox'/);
+    expect(code).not.toMatch(/from 'ui-detox'/);
     expect(code).not.toMatch(/tag: 'app-card'/);
   });
 });
@@ -66,7 +66,7 @@ describe('resolveSpecifier (filesystem, Python-style)', () => {
     // not found + single segment → bare npm specifier, verbatim
     expect(resolveSpecifier('missing', { baseDir: root })).toBe('missing');
     // npm/explicit passthrough
-    expect(resolveSpecifier('uidetox/forms', { baseDir: root })).toBe('uidetox/forms');
+    expect(resolveSpecifier('ui-detox/forms', { baseDir: root })).toBe('ui-detox/forms');
   });
 
   it('leaves bare npm specifiers verbatim; resolves .ts via extensions (REQ-14)', () => {
@@ -74,9 +74,9 @@ describe('resolveSpecifier (filesystem, Python-style)', () => {
     mkdirSync(join(root, 'nested'), { recursive: true });
     writeFileSync(join(root, 'tokens.ts'), '');
     // bare npm specifiers — never rewritten to relative
-    expect(resolveSpecifier('uidetox')).toBe('uidetox');
+    expect(resolveSpecifier('ui-detox')).toBe('ui-detox');
     expect(resolveSpecifier('lodash-es')).toBe('lodash-es');
-    expect(resolveSpecifier('uidetox/forms')).toBe('uidetox/forms');
+    expect(resolveSpecifier('ui-detox/forms')).toBe('ui-detox/forms');
     expect(resolveSpecifier('./sibling.js')).toBe('./sibling.js');
     // a local .ts, found via extensions → project-relative, source extension kept (REQ-15)
     const fromNested = resolveSpecifier('tokens', { baseDir: join(root, 'nested'), includes: [root], extensions: ['.dtx', '.ts'] });

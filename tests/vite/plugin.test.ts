@@ -22,7 +22,7 @@ function project(): string {
 describe('uidetox() Vite plugin', () => {
   it('exposes the expected hooks', () => {
     const p = uidetox();
-    expect(p.name).toBe('uidetox');
+    expect(p.name).toBe('ui-detox');
     expect(p.enforce).toBe('pre');
     expect(typeof p.resolveId).toBe('function');
     expect(typeof p.transform).toBe('function');
@@ -44,7 +44,7 @@ describe('uidetox() Vite plugin', () => {
 
   it('resolveId returns null for non-dotted specifiers', () => {
     const p = uidetox();
-    expect((p.resolveId as (id: string) => string | null)('uidetox/forms')).toBeNull();
+    expect((p.resolveId as (id: string) => string | null)('ui-detox/forms')).toBeNull();
     expect((p.resolveId as (id: string) => string | null)('./x.ts')).toBeNull();
   });
 

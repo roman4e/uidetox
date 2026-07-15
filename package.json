@@ -1,5 +1,5 @@
 {
-  "name": "uidetox",
+  "name": "ui-detox",
   "version": "0.1.1",
   "type": "module",
   "description": "HTML-first Web Components framework with Markdown SFCs. Not a React, nor Vue or Angular.",
@@ -38,7 +38,7 @@
     "prepublishOnly": "pnpm build && pnpm test"
   },
   "bin": {
-    "uidetox": "./dist/cli/build.js"
+    "ui-detox": "./dist/cli/build.js"
   },
   "types": "./dist/runtime/index.d.ts",
   "exports": {

@@ -37,7 +37,7 @@ native Web Components, signal reactivity, and a section-based authoring language
 ## Reactivity in 5 lines
 
 ```ts
-import { state, derived, effect } from 'uidetox';
+import { state, derived, effect } from 'ui-detox';
 
 const s = state({ count: 0, items: [1, 2] });
 const doubled = derived(() => s.count * 2);
@@ -195,7 +195,7 @@ Validation runs off-tick and coalesced; server errors flow in with
 ## Typed HTTP + OpenAPI
 
 ```
-uidetox openapi --input ./openapi.json --output ./src/api.ts
+ui-detox openapi --input ./openapi.json --output ./src/api.ts
 ```
 
 ```ts
@@ -207,7 +207,7 @@ const list = resource(
 ```
 
 Auth with single-flight 401 refresh, `mutation()` with optimistic rollback, and
-`command()` for CQRS writes — all in `uidetox/http`.
+`command()` for CQRS writes — all in `ui-detox/http`.
 
 ---
 
@@ -241,12 +241,12 @@ exposes the reactive current match (params, layout).
 
 | Import | What |
 |---|---|
-| `uidetox` | reactivity, components, directives, registry (DI), router, traits, filters, dnd, animations, SSR/islands, DevTools |
-| `uidetox/forms` | schema DSL, `form()`, `bind=`, `<field-error>` |
-| `uidetox/http` | `createHttpClient`, `resource`, `mutation`, `command`, OpenAPI codegen |
-| `uidetox/i18n` | `setLocale`, `fmt.{number,percent,qty,date,relative}`, unit conversion |
-| `uidetox/ui` | Semantic-UI primitive kit (`ui-button`, `ui-card`, `ui-modal`, …) |
-| `uidetox/vite` | Vite plugin — load `.dtx`/`.md`, dotted-module resolve, HMR, TS shims |
+| `ui-detox` | reactivity, components, directives, registry (DI), router, traits, filters, dnd, animations, SSR/islands, DevTools |
+| `ui-detox/forms` | schema DSL, `form()`, `bind=`, `<field-error>` |
+| `ui-detox/http` | `createHttpClient`, `resource`, `mutation`, `command`, OpenAPI codegen |
+| `ui-detox/i18n` | `setLocale`, `fmt.{number,percent,qty,date,relative}`, unit conversion |
+| `ui-detox/ui` | Semantic-UI primitive kit (`ui-button`, `ui-card`, `ui-modal`, …) |
+| `ui-detox/vite` | Vite plugin — load `.dtx`/`.md`, dotted-module resolve, HMR, TS shims |
 
 Also: reusable **traits** (`use="draggable"`), **filters** (`${v | qty:'g'}`),
 hierarchical **registry** DI, **islands** (`render: 'never'` + `hydrate`), FLIP
@@ -264,7 +264,7 @@ pnpm build       # tsc → dist/
 
 ```ts
 // vite.config.ts
-import uidetox from 'uidetox/vite';
+import uidetox from 'ui-detox/vite';
 export default { plugins: [uidetox()] };
 ```
 
@@ -285,7 +285,7 @@ Deep-dive guides in [`docs/patterns/`](docs/patterns/):
 | [ui-kit.md](docs/patterns/ui-kit.md) | Semantic-UI primitive components |
 | [shallow-batch.md](docs/patterns/shallow-batch.md) | `shallow()`, `batch()`, `untrack()` |
 | [island-wrapper.md](docs/patterns/island-wrapper.md) | wrapping imperative libraries (canvas, maps) |
-| [vite-plugin.md](docs/patterns/vite-plugin.md) | `uidetox/vite` — load `.dtx`/`.md`, HMR, TS shims |
+| [vite-plugin.md](docs/patterns/vite-plugin.md) | `ui-detox/vite` — load `.dtx`/`.md`, HMR, TS shims |
 
 ## Examples
 

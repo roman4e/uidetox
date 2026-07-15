@@ -13,7 +13,7 @@ export function createTagRegistry(): TagRegistry {
       const prev = byTag.get(tag);
       if (prev && prev !== file) {
         throw new Error(
-          `uidetox: duplicate custom-element tag "${tag}" — declared in both\n  ${prev}\n  ${file}\nTags must be unique across the app.`,
+          `ui-detox: duplicate custom-element tag "${tag}" — declared in both\n  ${prev}\n  ${file}\nTags must be unique across the app.`,
         );
       }
       byTag.set(tag, file);

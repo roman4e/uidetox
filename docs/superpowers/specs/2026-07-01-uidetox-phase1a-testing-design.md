@@ -7,7 +7,7 @@
 
 ## 1. Purpose
 
-Give every UIDetox component the ability to carry its tests, fixtures, mocks, structural snapshots, pixel-diff snapshots and accessibility assertions in the same `.md` file — and let those tests run through a single `uidetox test` CLI. Testing is the framework's headline DNA; this phase makes that DNA real.
+Give every UIDetox component the ability to carry its tests, fixtures, mocks, structural snapshots, pixel-diff snapshots and accessibility assertions in the same `.md` file — and let those tests run through a single `ui-detox test` CLI. Testing is the framework's headline DNA; this phase makes that DNA real.
 
 ## 2. Non-goals (Phase 1a)
 
@@ -106,7 +106,7 @@ expect(await axe(document.body)).toHaveNoViolations();
   1. Production module (unchanged from Phase 0) — templates, script, style.
   2. Test module (`.test.js`) — component boot + fixtures + mock + all `test*` blocks wrapped in the test-runner harness.
 - **Runtime layer (execution-time).** New package `src/testing/` supplies the injected globals (`expect`, `it`, `snapshot`, `axe`, `pixel`, `capture`, `flushSync`), the Registry (hierarchical, moved forward from Phase 2), and `defineEmits()` for the component runtime.
-- **Runner layer.** `uidetox test <dir>` scans SFCs, compiles their test modules to a cache directory (`.uidetox/test-cache/`), and executes them through the right environment for each block role.
+- **Runner layer.** `ui-detox test <dir>` scans SFCs, compiles their test modules to a cache directory (`.ui-detox/test-cache/`), and executes them through the right environment for each block role.
 
 ### 5.2 Environments
 
@@ -122,8 +122,8 @@ The runner batches blocks by environment: it starts one happy-dom pass for all f
 For `todo.md` the test compiler emits `todo.test.js`:
 
 ```js
-import { defineComponent, __el, /* ... */, registry } from 'uidetox';
-import { it, describe, expect, snapshot, pixel, axe, flushSync, capture, fixtures as $fixtures } from 'uidetox/testing';
+import { defineComponent, __el, /* ... */, registry } from 'ui-detox';
+import { it, describe, expect, snapshot, pixel, axe, flushSync, capture, fixtures as $fixtures } from 'ui-detox/testing';
 // component boot (identical to prod)
 function boot(ctx) { /* script + template inlined */ }
 defineComponent({ tag: 'app-todo', props: [...], boot });
@@ -143,13 +143,13 @@ Blocks that require Playwright (`test:visual:pixel`, `test:a11y:browser`) are em
 ### 5.4 Runner
 
 ```
-uidetox test <dir> [--filter <pattern>] [--update-snapshots] [--only <role>]
+ui-detox test <dir> [--filter <pattern>] [--update-snapshots] [--only <role>]
 ```
 
 Steps:
 
 1. Walk `<dir>` for `*.md`, parse SFCs.
-2. For each SFC that has any `test*` block, run the test compiler → cache `.uidetox/test-cache/<rel>.test.js` and optionally `<rel>.browser.test.js`.
+2. For each SFC that has any `test*` block, run the test compiler → cache `.ui-detox/test-cache/<rel>.test.js` and optionally `<rel>.browser.test.js`.
 3. Group files:
    - **Group A** — happy-dom modules. Run in-process; each module gets a fresh `happy-dom` window (`Registry` re-provided per module, mocks applied per block).
    - **Group B** — Playwright modules. Spawn Chromium once, page-per-module; serve a lightweight harness page from the runner that imports the test module.
@@ -206,10 +206,10 @@ Attaches a listener that pushes `event.detail` into an array; returns the array.
 
 ### 8.1 Commands
 
-- `uidetox test <dir>` — run all tests under a directory.
-- `uidetox test <dir> --filter <pattern>` — glob-filter by SFC name.
-- `uidetox test <dir> --only <role>` — run only blocks of a specific role (e.g. `--only test:visual`).
-- `uidetox test <dir> --update-snapshots` — write missing baselines / accept new ones.
+- `ui-detox test <dir>` — run all tests under a directory.
+- `ui-detox test <dir> --filter <pattern>` — glob-filter by SFC name.
+- `ui-detox test <dir> --only <role>` — run only blocks of a specific role (e.g. `--only test:visual`).
+- `ui-detox test <dir> --update-snapshots` — write missing baselines / accept new ones.
 
 ### 8.2 Output
 
@@ -249,7 +249,7 @@ src/
       runtime.ts            # axe() for happy-dom
       browser.ts            # axe() for Playwright
   cli/
-    test.ts                 # uidetox test command
+    test.ts                 # ui-detox test command
     testRunner/
       happyDomEnv.ts        # in-process env harness
       playwrightEnv.ts      # spawn + drive Playwright
@@ -264,7 +264,7 @@ snapshots/                  # generated snapshot baselines (per component subdir
 
 ## 10. Compatibility
 
-- Existing Phase 0 CLI (`uidetox build`) unchanged.
+- Existing Phase 0 CLI (`ui-detox build`) unchanged.
 - Existing Phase 0 runtime API unchanged.
 - Existing Phase 0 Vitest suite under `tests/` remains the framework's own test harness (dogfooding is a Phase 2 nice-to-have, out of scope now).
 

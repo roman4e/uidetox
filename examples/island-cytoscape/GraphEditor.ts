@@ -9,7 +9,7 @@
 //
 // A real app imports `cytoscape`; here `makeGraph` is a tiny self-contained stub
 // so the example has no external dependency.
-import { defineComponent, registerDnd, installTraits } from 'uidetox';
+import { defineComponent, registerDnd, installTraits } from 'ui-detox';
 
 interface GraphNode { id: string; label: string; x: number; y: number }
 

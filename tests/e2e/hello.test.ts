@@ -7,14 +7,14 @@ import * as runtime from '../../src/runtime/index.js';
 import { state } from '../../src/runtime/state.js';
 
 /**
- * Runs an emitted UIDetox module by stripping its `import from "uidetox"`
+ * Runs an emitted UIDetox module by stripping its `import from "ui-detox"`
  * statement and evaluating the remaining code with the runtime helpers
  * injected as free variables. Safer than data-URL import + more predictable
  * inside happy-dom.
  */
 function evalCompiledModule(js: string): void {
   const stripped = js
-    .replace(/^import\s*\{[^}]+\}\s*from\s*"uidetox";\s*\n?/m, '')
+    .replace(/^import\s*\{[^}]+\}\s*from\s*"ui-detox";\s*\n?/m, '')
     // strip the ESM `export default` (the route-handler factory) for new Function eval
     .replace(/^export default /m, 'const __uidetoxDefault = ');
   const names = [

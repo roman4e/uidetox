@@ -270,7 +270,7 @@ Build steps:
    - `.dtx` files containing a `router` declaration.
 2. **Resolve priorities.** Each `router` may declare `priority <n>` (default 50). Higher wins on identical patterns.
 3. **Compose.** For each source, apply its `from "…"` mount prefix. Nested `<Router>` inside a `routes.md` composes with its parent by concatenation.
-4. **Emit.** Write the merged routes table to `.uidetox/cache/routes.gen.ts` as:
+4. **Emit.** Write the merged routes table to `.ui-detox/cache/routes.gen.ts` as:
    ```ts
    export const routes: RouteEntry[] = [
      { path: '/',          handler: Home,       paramsSchema: {},                 priority: 50, guards: [],                     status: null, meta: { title: 'Home' } },

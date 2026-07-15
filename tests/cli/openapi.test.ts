@@ -24,7 +24,7 @@ describe('uidetox openapi', () => {
     writeFileSync(input, JSON.stringify(spec));
     await runOpenApi({ input, output });
     const code = readFileSync(output, 'utf8');
-    expect(code).toContain("from 'uidetox/http'");
+    expect(code).toContain("from 'ui-detox/http'");
     expect(code).toContain('auth: {');
     expect(code).toContain('getMe(');
     expect(code).toContain('export function createClient');

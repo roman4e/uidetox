@@ -16,7 +16,7 @@ export async function runDev(opts: DevOptions = {}): Promise<void> {
   try {
     vite = (await import('vite' as string)) as unknown as ViteLike;
   } catch {
-    throw new Error('`uidetox dev` requires "vite". Install it: npm i -D vite');
+    throw new Error('`ui-detox dev` requires "vite". Install it: npm i -D vite');
   }
   const uidetox = (await import('../vite/index.js')).default;
   const root = opts.root ?? process.cwd();
@@ -35,7 +35,7 @@ export async function runTest(opts: { root?: string } = {}): Promise<void> {
   try {
     node = (await import('vitest/node' as string)) as unknown as VitestNodeLike;
   } catch {
-    throw new Error('`uidetox test` requires "vitest". Install it: npm i -D vitest');
+    throw new Error('`ui-detox test` requires "vitest". Install it: npm i -D vitest');
   }
   const { uidetoxEsbuild } = await import('../vite/index.js');
   await node.startVitest('test', [], {

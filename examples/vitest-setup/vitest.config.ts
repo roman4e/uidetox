@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitest/config';
-import { uidetoxEsbuild } from 'uidetox/vite';
+import { uidetoxEsbuild } from 'ui-detox/vite';
 
 export default defineConfig({
   test: {
