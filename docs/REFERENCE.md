@@ -405,6 +405,16 @@ Section semantics: `script` = private boot statements; `actions` = each
 template is built; `style scoped` detects `scoped` on the header;
 `task` / `task idle` wraps the body as `task(async (signal) => { … })`.
 
+**Auto-imported primitives.** `defineComponent`, the template helpers, and the
+module-level reactivity primitives — `state`, `derived`, `batch`, `shallow`,
+`untrack`, `untracked`, `defer`, `idle` — are imported for you when a body calls
+them, so a `script` can write `const s = state({…})` with no `import` line. (An
+explicit `import state from "uidetox"` still works and is de-duplicated.) The
+ctx-provided helpers `effect`/`emit`/`task`/`onCleanup`/`readFrame` come from the
+boot destructure, not an import. If a component ever renders empty, open the browser
+console: a boot-time `ReferenceError` (e.g. an unrecognized identifier) aborts the
+render and leaves the element empty — it is not a template or `<if>` reactivity bug.
+
 **Refs are reactive.** A `#name` inside a control-flow block (`<if>`, `<for>`,
 `<case>`) is *not* populated synchronously — those blocks defer their first render
 to a microtask, so `refs.name` is `undefined` right after the template is built and
