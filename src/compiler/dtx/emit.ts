@@ -380,13 +380,18 @@ export function emitDtx(ast: DtxAst, opts: SpecifierOptions = {}): { code: strin
   for (const imp of ast.imports) lines.push(emitImport(imp, opts, defaultRefs).trimEnd());
   lines.push('');
   for (const d of ast.declares ?? []) lines.push(emitDeclare(d));
+  // A module may hold at most one `export default`; the first component owns it.
+  let componentDefaultEmitted = false;
   for (const decl of ast.declarations) {
     if (decl.verb === 'trait') lines.push(emitTraitDecl(decl));
     else if (decl.verb === 'filter') lines.push(emitFilterDecl(decl));
     else if (decl.verb === 'token') lines.push(emitTokenDecl(decl));
     else if (decl.verb === 'provide') lines.push(emitProvideDecl(decl));
     else if (decl.verb === 'router') lines.push(emitRouterDecl(decl));
-    else if (decl.verb === 'component') lines.push(emitComponent(decl));
+    else if (decl.verb === 'component') {
+      lines.push(emitComponent(decl, !componentDefaultEmitted));
+      componentDefaultEmitted = true;
+    }
   }
   return { code: lines.join('\n') };
 }
