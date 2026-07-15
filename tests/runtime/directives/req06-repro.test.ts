@@ -70,6 +70,26 @@ describe('REQ-06: multi-component .dtx file + nested <if> reactivity', () => {
     expect((code.match(/defineComponent\(/g) ?? []).length).toBe(2);
   });
 
+  it('never emits two default exports when a router and a component share a file', () => {
+    const src = `
+router
+routes
+/ A
+end routes
+end router
+
+component A export tag a-x
+template
+<div>a</div>
+end template
+end component
+`;
+    const { code } = compileDtxSource(src);
+    expect((code.match(/^export default /gm) ?? []).length).toBe(1);
+    // both still present: the router owns the default, the component still registers.
+    expect((code.match(/defineComponent\(/g) ?? []).length).toBe(1);
+  });
+
   it('registers both components and the nested <if> mounts when its signal flips', async () => {
     evalComponent(compileDtxSource(TWO_COMPONENTS).code, { ...RT, defineComponent, state });
 

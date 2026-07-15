@@ -346,6 +346,19 @@ A section-based grammar. Top-level verbs: `component`, `trait`, `filter`, `token
 `export`/`disabled`, `tag <name>`, `extends [A, B]`, `appliesto [input]`,
 `input`/`output` (filters), `params (type name, type? name default)`.
 
+**Module output & the `export default`.** Each file compiles to one ESM module.
+A `component` emits a route-handler factory as the module's `export default`
+(importing the file registers the custom element via a side effect); a `router`
+emits its `RouteEntry[]` as the default. A module can have **at most one**
+`export default`, so **only the first** default-owning declaration (first
+`component`, or a `router`) gets it — later components still register (reachable by
+tag/name) and a secondary `router` becomes a named `const`. **Prefer one component
+per `.dtx` file.** Multiple components share a file fine, but only the first is the
+routable default; if you route to a component, keep it first or give it its own file.
+(Before this rule each component emitted its own default — a multi-component file
+then failed to load with `SyntaxError: Identifier '.default' has already been
+declared`, which reads as "the component never mounts".)
+
 Two member kinds:
 
 - **Section members** — `props`, `tpl`/`template`, `script`, `actions`,
