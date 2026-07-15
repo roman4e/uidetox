@@ -200,8 +200,11 @@ function convert(
     const attrs: TplAttr[] = (node.attrs ?? [])
       .filter((a) => a.name !== 'data-uidx')
       .map((a) => classifyAttr(a.name, a.value, exprs));
+    // parse5 stores <template> children in `.content` — except inside SVG/MathML
+    // foreign content, where a <template> is a foreign element and its children
+    // stay in `.childNodes`. Prefer content, fall back to childNodes (REQ-05-01).
     const childNodes = (uidx || node.tagName === 'template')
-      ? node.content?.childNodes ?? []
+      ? (node.content?.childNodes?.length ? node.content.childNodes : node.childNodes ?? [])
       : node.childNodes ?? [];
     const children: TplNode[] = [];
     for (const child of childNodes) {

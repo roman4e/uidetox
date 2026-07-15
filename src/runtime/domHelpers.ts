@@ -166,6 +166,16 @@ export function __bind(
   return el;
 }
 
+// SVG geometry/structure tags — created in the SVG namespace so they render as
+// real SVG (and so `<for>`/`<if>` can produce declarative data-driven graphics).
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const SVG_TAGS = new Set([
+  'svg', 'g', 'path', 'circle', 'ellipse', 'line', 'rect', 'polygon', 'polyline',
+  'text', 'tspan', 'textPath', 'defs', 'use', 'symbol', 'marker', 'clipPath',
+  'mask', 'pattern', 'linearGradient', 'radialGradient', 'stop', 'foreignObject',
+  'image', 'filter', 'feGaussianBlur', 'feOffset', 'feBlend', 'feColorMatrix',
+]);
+
 export function __el(
   tag: string,
   attrs: AttrDescriptor[],
@@ -173,7 +183,9 @@ export function __el(
   ctx: TemplateCtx,
 ): HTMLElement {
   const resolved = pascalToKebab(tag);
-  const el = document.createElement(resolved);
+  const el = (SVG_TAGS.has(tag)
+    ? document.createElementNS(SVG_NS, tag)
+    : document.createElement(resolved)) as HTMLElement;
   for (const [name, kind, value] of attrs) {
     if (kind === 'static') {
       el.setAttribute(name, value as string);
