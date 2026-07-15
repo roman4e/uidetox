@@ -87,7 +87,7 @@ export function flushSync(): void {
   }
   if (turns >= MAX_TURNS) {
     // eslint-disable-next-line no-console
-    console.warn('[uidetox] scheduler exceeded MAX_TURNS; possible infinite reactive loop');
+    console.warn('[ui-detox] scheduler exceeded MAX_TURNS; possible infinite reactive loop');
   }
   const endJobs = [...frameEndCbs];
   frameEndCbs.clear();
@@ -103,7 +103,7 @@ export function scheduleFlush(job: Job): void {
   if (!deprecationWarned) {
     deprecationWarned = true;
     // eslint-disable-next-line no-console
-    console.warn('[uidetox] scheduleFlush is deprecated, use scheduleEffect. It will be removed in a future release.');
+    console.warn('[ui-detox] scheduleFlush is deprecated, use scheduleEffect. It will be removed in a future release.');
   }
   scheduleEffect(job);
 }

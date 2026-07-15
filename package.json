@@ -38,7 +38,7 @@
     "prepublishOnly": "pnpm build && pnpm test"
   },
   "bin": {
-    "uidetox": "./dist/cli/build.js"
+    "ui-detox": "./dist/cli/build.js"
   },
   "types": "./dist/runtime/index.d.ts",
   "exports": {

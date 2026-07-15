@@ -96,7 +96,7 @@ export function createUidetoxCore(opts: UidetoxPluginOptions = {}) {
   return {
     root, configPath, configRoot, config, tags, resolveSpecifier, transform,
     getCss: (id: string) => cssModules.get(id.replace(/^\0/, '')),
-    /** Writes <root>/.uidetox/dtx-shims.d.ts for `tsc --noEmit`. Returns the path. */
+    /** Writes <root>/.ui-detox/dtx-shims.d.ts for `tsc --noEmit`. Returns the path. */
     writeShims: () => writeShims(root, config, configRoot),
   };
 }

@@ -18,7 +18,7 @@ export interface TestOptions {
 }
 
 export async function runTest(options: TestOptions): Promise<{ passed: number; failed: number; report: string }> {
-  const cacheDir = options.cacheDir ?? join(options.inputDir, '..', '.uidetox', 'test-cache');
+  const cacheDir = options.cacheDir ?? join(options.inputDir, '..', '.ui-detox', 'test-cache');
   const snapshotsDir = options.snapshotsDir ?? join(options.inputDir, '..', 'snapshots');
   const filter = options.filter ? new RegExp(options.filter) : null;
   const discovered = await discover(options.inputDir, cacheDir);

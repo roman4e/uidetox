@@ -55,7 +55,7 @@
 │   │   ├── compile.ts          # top-level compile(fileContents) → { js }
 │   │   └── index.ts
 │   └── cli/
-│       └── build.ts            # CLI entry (`uidetox build <glob>`)
+│       └── build.ts            # CLI entry (`ui-detox build <glob>`)
 ├── tests/
 │   ├── runtime/                # unit tests per runtime module
 │   ├── compiler/               # snapshot tests per compiler module
@@ -2613,7 +2613,7 @@ git commit -m "feat(compiler): top-level compile(source) glue"
 
 ---
 
-## Task 15: CLI — `uidetox build <glob>`
+## Task 15: CLI — `ui-detox build <glob>`
 
 **Files:**
 - Create: `src/cli/build.ts`
@@ -2621,7 +2621,7 @@ git commit -m "feat(compiler): top-level compile(source) glue"
 
 **Interfaces:**
 - Produces:
-  - `uidetox build <inputGlob> --outDir <dir>` — writes one `.js` per `.md` file, preserving relative paths.
+  - `ui-detox build <inputGlob> --outDir <dir>` — writes one `.js` per `.md` file, preserving relative paths.
   - Uses `commander` for arg parsing, `fs/promises` for reading, and Node's `glob` (via `fs.glob` or `fast-glob`; for MVP we implement a minimal recursive walk to avoid another dependency).
 
 - [ ] **Step 1: Write the failing test**
@@ -2729,7 +2729,7 @@ Expected: PASS — 1 test.
 
 ```bash
 git add src/cli/build.ts tests/cli/build.test.ts
-git commit -m "feat(cli): uidetox build compiles SFCs into a dist folder"
+git commit -m "feat(cli): ui-detox build compiles SFCs into a dist folder"
 ```
 
 ---

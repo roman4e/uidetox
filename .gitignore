@@ -1,8 +1,8 @@
 node_modules
 dist
-.uidetox
+.ui-detox
 *.log
-.uidetox/
+.ui-detox/
 
 # Consumer feature-request docs — never committed (local only)
 docs/req-*/

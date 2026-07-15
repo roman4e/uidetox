@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Deliver a working `uidetox test <dir>` CLI that runs `test`, `test:interaction`, `test:visual`, `test:visual:pixel`, `test:a11y`, and `test:a11y:browser` blocks defined inside Markdown SFCs, with a hierarchical Registry, `defineEmits()`, `capture()`, structural + pixel-diff snapshots, and axe-core accessibility checks.
+**Goal:** Deliver a working `ui-detox test <dir>` CLI that runs `test`, `test:interaction`, `test:visual`, `test:visual:pixel`, `test:a11y`, and `test:a11y:browser` blocks defined inside Markdown SFCs, with a hierarchical Registry, `defineEmits()`, `capture()`, structural + pixel-diff snapshots, and axe-core accessibility checks.
 
-**Architecture:** A new compiler pass (`testCompile.ts`) emits a per-SFC **test module** that inlines the component boot code alongside `fixtures`, `mock`, and every `test*` block. A new **testing package** (`src/testing/`) supplies the globals that these blocks reference (`it`, `describe`, `expect`, `snapshot`, `pixel`, `axe`, `flushSync`, `capture`) plus a hierarchical Registry lifted forward from Phase 2. The `uidetox test` runner discovers SFCs, groups modules by required environment, and executes fast blocks in-process against `happy-dom` while dispatching pixel and browser-a11y blocks to a spawned Playwright/Chromium worker.
+**Architecture:** A new compiler pass (`testCompile.ts`) emits a per-SFC **test module** that inlines the component boot code alongside `fixtures`, `mock`, and every `test*` block. A new **testing package** (`src/testing/`) supplies the globals that these blocks reference (`it`, `describe`, `expect`, `snapshot`, `pixel`, `axe`, `flushSync`, `capture`) plus a hierarchical Registry lifted forward from Phase 2. The `ui-detox test` runner discovers SFCs, groups modules by required environment, and executes fast blocks in-process against `happy-dom` while dispatching pixel and browser-a11y blocks to a spawned Playwright/Chromium worker.
 
 **Tech Stack:** TypeScript 5.x (existing), Vitest for the framework's own dogfooded suite (existing), `happy-dom` (existing), `axe-core` for accessibility checks, `pixelmatch` + `pngjs` for image diffing, `playwright` for browser-side runs. Node `node:test`-compatible collectors are **not** used; the framework ships its own light collector — small enough to keep the CLI understandable, big enough to serve Phase 1a.
 
@@ -13,7 +13,7 @@
 - **Language:** TypeScript 5.x, `strict: true`, ESM.
 - **Runtime environment for fast blocks:** `happy-dom` (already a dev dependency).
 - **Runtime environment for pixel & browser-a11y:** Playwright Chromium; the runner triggers `playwright install chromium` on first use.
-- **Framework compatibility:** Phase 0 CLI (`uidetox build`) and Phase 0 runtime API must remain unchanged; all Phase 1a code lives in **new** files under `src/testing/`, `src/compiler/testCompile.ts`, `src/cli/test.ts`, `src/cli/testRunner/`, and `src/runtime/registry.ts` + `src/runtime/emits.ts`.
+- **Framework compatibility:** Phase 0 CLI (`ui-detox build`) and Phase 0 runtime API must remain unchanged; all Phase 1a code lives in **new** files under `src/testing/`, `src/compiler/testCompile.ts`, `src/cli/test.ts`, `src/cli/testRunner/`, and `src/runtime/registry.ts` + `src/runtime/emits.ts`.
 - **Test discipline:** TDD — write a failing Vitest test first, run it, implement, run passing, commit.
 - **Naming:** All test-only public exports are re-exported through `src/testing/index.ts`; the runner injects them at compile time — SFC authors never import them explicitly.
 - **Snapshot layout:** structural snapshots live at `snapshots/<component>/<name>.snap.txt`; pixel snapshots at `snapshots/<component>/<name>.png`. Missing baselines are created only when `--update-snapshots` is passed.
@@ -47,7 +47,7 @@
 │   │       ├── runtime.ts                  # NEW: axe() in happy-dom
 │   │       └── browser.ts                  # NEW: axe() in Playwright
 │   └── cli/
-│       ├── test.ts                         # NEW: `uidetox test` command
+│       ├── test.ts                         # NEW: `ui-detox test` command
 │       └── testRunner/
 │           ├── discover.ts                 # NEW: walk *.md, decide which need tests
 │           ├── happyDomEnv.ts              # NEW: dynamic import of a test module in-process
@@ -2068,7 +2068,7 @@ git commit -m "feat(cli): human + json reporters"
 
 ---
 
-## Task 17: `uidetox test` CLI command
+## Task 17: `ui-detox test` CLI command
 
 **Files:**
 - Create: `src/cli/test.ts`
@@ -2077,7 +2077,7 @@ git commit -m "feat(cli): human + json reporters"
 
 **Interfaces:**
 - Produces: `runTest(options: { inputDir: string; cacheDir?: string; snapshotsDir?: string; updateSnapshots?: boolean; filter?: string; only?: string; reporter?: 'human' | 'json'; }): Promise<{ passed: number; failed: number; report: string }>`.
-- CLI: `uidetox test <inputDir> [--out <cacheDir>] [--snapshots <dir>] [--update-snapshots] [--filter <glob>] [--only <role>] [--reporter <human|json>]`.
+- CLI: `ui-detox test <inputDir> [--out <cacheDir>] [--snapshots <dir>] [--update-snapshots] [--filter <glob>] [--only <role>] [--reporter <human|json>]`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2223,7 +2223,7 @@ Expected: PASS — 1 test.
 
 ```bash
 git add src/cli/test.ts tests/cli/test-command.test.ts
-git commit -m "feat(cli): uidetox test command"
+git commit -m "feat(cli): ui-detox test command"
 ```
 
 ---
@@ -2339,7 +2339,7 @@ Expected: PASS — every runtime, compiler, testing, cli and e2e test.
 
 ```bash
 git add examples/todo/Todo.md tests/e2e/phase1a-todo.test.ts
-git commit -m "test(e2e): phase 1a example — todo runs green through uidetox test"
+git commit -m "test(e2e): phase 1a example — todo runs green through ui-detox test"
 ```
 
 ---
@@ -2351,7 +2351,7 @@ git commit -m "test(e2e): phase 1a example — todo runs green through uidetox t
   - §5 architecture → Tasks 12 (test-module skeleton), 13 (cache write), 14 (happy-dom env), 15 (Playwright env).
   - §6 runtime additions → Tasks 2 (Registry), 3 (defineEmits), 4 (capture).
   - §7 utilities → Tasks 5 (expect), 6 (collect), 7 (run), 8 (snapshot), 9 (a11y runtime), 10 (pixel).
-  - §8 CLI → Tasks 16 (reporter), 17 (`uidetox test`).
+  - §8 CLI → Tasks 16 (reporter), 17 (`ui-detox test`).
   - §9 file layout matches Tasks 2–17.
   - §11 rendering interaction — explicitly deferred; no task needed.
   - §12 open questions — runner choice resolved (hand-rolled), Playwright install policy documented in Task 15, threshold fixed at 0.1 in Task 10.
@@ -2362,5 +2362,5 @@ git commit -m "test(e2e): phase 1a example — todo runs green through uidetox t
 
 - `test:interaction` block gets no dedicated runtime helpers in Phase 1a beyond direct DOM APIs; a `user`-style helper is Phase 2.
 - Full browser-side test module (proper module-import path via a served harness page) is Phase 2; Phase 1a's Playwright env uses inline script eval and a graceful skip.
-- Watch mode (`uidetox test --watch`) is Phase 2.
+- Watch mode (`ui-detox test --watch`) is Phase 2.
 - Pixel tolerance per-test-role config, and cross-platform baseline handling, are Phase 2.

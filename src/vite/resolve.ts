@@ -48,7 +48,7 @@ export function resolveDottedModule(
 /** Builds a helpful resolver-miss error listing every path tried. */
 export function dottedMissError(spec: string, result: ResolveResult, configPath: string): Error {
   return new Error(
-    `uidetox: cannot resolve dotted module "${spec}".\n` +
+    `ui-detox: cannot resolve dotted module "${spec}".\n` +
       `Config: ${configPath}\n` +
       `Tried:\n${result.tried.map((p) => `  ${p}`).join('\n')}`,
   );

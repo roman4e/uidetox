@@ -42,5 +42,5 @@ export function compileModule(id: string, source: string, opts: CompileOptions =
     // The Markdown compiler has no source map; anchor generated lines to the .md.
     return { code: js, map: JSON.stringify(buildLineMap(id, source, js)), tag };
   }
-  throw new Error(`uidetox: cannot compile ${id} (expected .dtx or .md)`);
+  throw new Error(`ui-detox: cannot compile ${id} (expected .dtx or .md)`);
 }

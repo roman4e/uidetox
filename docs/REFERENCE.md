@@ -1013,7 +1013,7 @@ import { createHttpClient, resource, mutation, ApiError } from 'ui-detox/http';
 ### Codegen
 
 ```
-uidetox openapi --input ./openapi.json --output ./src/generated/api.ts
+ui-detox openapi --input ./openapi.json --output ./src/generated/api.ts
 ```
 
 Emits named types from `components.schemas`, an `ApiClient` interface with
@@ -1158,4 +1158,4 @@ for a custom inspector.
 | `ui-detox/i18n` | `setLocale`, `fmt`, `registerUnit`, filters, `t` |
 | `ui-detox/compiler` | compile Markdown SFC / `.dtx` → JS (build-time) |
 
-CLI: `uidetox build <dir>`, `uidetox openapi --input --output`, `uidetox test <dir>`.
+CLI: `ui-detox build <dir>`, `ui-detox openapi --input --output`, `ui-detox test <dir>`.

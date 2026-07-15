@@ -195,7 +195,7 @@ Validation runs off-tick and coalesced; server errors flow in with
 ## Typed HTTP + OpenAPI
 
 ```
-uidetox openapi --input ./openapi.json --output ./src/api.ts
+ui-detox openapi --input ./openapi.json --output ./src/api.ts
 ```
 
 ```ts

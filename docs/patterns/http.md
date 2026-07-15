@@ -1,13 +1,13 @@
 # Pattern: HTTP client + typed API layer
 
 `ui-detox/http` provides a typed HTTP client, a reactive `resource()`, and a
-`mutation()` helper. `uidetox openapi` generates a fully-typed client from a
+`mutation()` helper. `ui-detox openapi` generates a fully-typed client from a
 FastAPI/OpenAPI 3.1 document. No runtime dependencies.
 
 ## Codegen
 
 ```
-uidetox openapi --input ./openapi.json --output ./src/generated/api.ts
+ui-detox openapi --input ./openapi.json --output ./src/generated/api.ts
 ```
 
 Produces named types from `components.schemas`, an `ApiClient` interface with

@@ -93,14 +93,14 @@ describe('Widget', __tests)`.
 
 ## TypeScript
 
-On `buildStart` the plugin writes `<root>/.uidetox/dtx-shims.d.ts` — ambient
+On `buildStart` the plugin writes `<root>/.ui-detox/dtx-shims.d.ts` — ambient
 `declare module` blocks for every dotted spec under the include roots, each with
 its `Props` type and default-export signature. Add it to your tsconfig so
 `tsc --noEmit` resolves dotted imports:
 
 ```jsonc
 // tsconfig.json
-{ "include": ["src", ".uidetox/dtx-shims.d.ts"] }
+{ "include": ["src", ".ui-detox/dtx-shims.d.ts"] }
 ```
 
 ```ts
@@ -119,11 +119,11 @@ one interface — the `.d.ts` is always valid TypeScript.
 Thin launchers so a project's `package.json` needs no hand-written config:
 
 ```json
-{ "scripts": { "dev": "uidetox dev", "test": "uidetox test", "build": "uidetox build" } }
+{ "scripts": { "dev": "ui-detox dev", "test": "ui-detox test", "build": "ui-detox build" } }
 ```
 
-- `uidetox dev` — starts Vite with `uidetox()` pre-registered (needs `vite`).
-- `uidetox test` — runs Vitest under happy-dom with `uidetoxEsbuild()` in
+- `ui-detox dev` — starts Vite with `uidetox()` pre-registered (needs `vite`).
+- `ui-detox test` — runs Vitest under happy-dom with `uidetoxEsbuild()` in
   `mode: 'test'` (needs `vitest`).
 
 Both error with an install hint if the tool isn't present.
@@ -134,7 +134,7 @@ Shipped: `.dtx`/`.md` loading, dotted + single-segment resolution, duplicate-tag
 guard, esbuild factory, `router` verb → `RouteEntry[]`, scoped-CSS through Vite's
 pipeline, mode-gated colocated tests, auto-written TS shims (`tsc --noEmit`
 resolves dotted imports), element-interface host-method typing, `.md` source
-maps, `uidetox dev` / `uidetox test` CLI wrappers, the `examples/culinary-lite/`
+maps, `ui-detox dev` / `ui-detox test` CLI wrappers, the `examples/culinary-lite/`
 smoke project.
 
 Still v1-simplified: HMR is a full route reload (not versioned-tag hot-swap).
