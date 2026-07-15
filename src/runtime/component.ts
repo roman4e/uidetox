@@ -2,6 +2,7 @@ import { setCurrentHost } from './emits.js';
 import { setCleanupSink } from './lifecycle.js';
 import { effect } from './effect.js';
 import { registry } from './registry.js';
+import { readFrame } from './scheduler.js';
 import { state } from './state.js';
 import { task, type TaskOptions } from './task.js';
 
@@ -16,6 +17,14 @@ export interface TemplateCtx {
   effect: (fn: () => void | (() => void)) => () => void;
   /** Detached async reactive task — auto-disposed on disconnect. */
   task: (fn: (signal: AbortSignal) => void | Promise<void>, opts?: TaskOptions) => () => void;
+  /**
+   * Run `fn` after the next DOM commit and resolve with its result — for reading
+   * post-layout geometry (offsetHeight, getBoundingClientRect) inside a `script`
+   * or `effects` section without a manual `import`. Pairs with reactive `refs`:
+   * `effect(() => { if (refs.pop && props.anchor) readFrame(() => place()) })`
+   * re-runs once the ref lands, then measures on the following frame (REQ-08).
+   */
+  readFrame: <T>(fn: () => T) => Promise<T>;
   /** Register teardown to run when this component disconnects (REQ-27). */
   onCleanup: (fn: () => void) => void;
   /** Dispatch a bubbling composed CustomEvent from the host. */
@@ -71,6 +80,14 @@ export function defineComponent(options: ComponentOptions): void {
         if (this.hasAttribute(name)) {
           this._props[name] = this.getAttribute(name);
         }
+        // Reflect a property assigned before upgrade (own prop shadowing the
+        // accessor) into reactive _props — object/array/function props survive.
+        if (Object.prototype.hasOwnProperty.call(this, name)) {
+          const bag = this as unknown as Record<string, unknown>;
+          const v = bag[name];
+          delete bag[name];
+          bag[name] = v; // through the accessor → _props (typed value wins over attr)
+        }
       }
       // Route params set by a route handler — typed (coerced by paramsSchema),
       // so they overwrite the string attribute values (REQ-18).
@@ -81,7 +98,13 @@ export function defineComponent(options: ComponentOptions): void {
       const slotted: ChildNode[] = [];
       while (this.firstChild) { slotted.push(this.firstChild); this.removeChild(this.firstChild); }
       this._slotted = slotted;
-      const refs: Record<string, Element> = {};
+      // Reactive: a ref populated late by a deferred control-flow block (e.g. a
+      // `#el` inside an `<if>`, whose first render is queued to a microtask) then
+      // notifies effects that read it — so `effects`-section code like
+      // `effect(() => { if (refs.pop) place() })` re-runs once the ref lands,
+      // instead of reading `undefined` forever (REQ-08). DOM nodes are native
+      // objects, so `state` returns them as-is (REQ-07) — identity is preserved.
+      const refs: Record<string, Element> = state<Record<string, Element>>({});
       const ctx: TemplateCtx = {
         props: this._props,
         host: this,
@@ -100,6 +123,7 @@ export function defineComponent(options: ComponentOptions): void {
           return dispose;
         },
         onCleanup: (fn) => { this._disposers.push(fn); },
+        readFrame,
         emit: (name, detail) => {
           this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
         },
@@ -170,6 +194,22 @@ export function defineComponent(options: ComponentOptions): void {
     attributeChangedCallback(name: string, _prev: string | null, next: string | null): void {
       this._props[name] = next;
     }
+  }
+
+  // Bridge declared props to reactive _props: a `.prop=${obj}` binding (or a plain
+  // `el.prop = obj`) writes through the accessor into the reactive proxy, so the
+  // child reads it via `ctx.props.prop` and re-renders on change (REQ-05 / REQ-28).
+  for (const name of observedAttrs) {
+    Object.defineProperty(UiElement.prototype, name, {
+      configurable: true,
+      enumerable: true,
+      get(this: UiElement): unknown {
+        return (this as unknown as { _props: Record<string, unknown> })._props[name];
+      },
+      set(this: UiElement, v: unknown): void {
+        (this as unknown as { _props: Record<string, unknown> })._props[name] = v;
+      },
+    });
   }
 
   customElements.define(options.tag, UiElement);

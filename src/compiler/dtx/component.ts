@@ -36,7 +36,7 @@ function actionNames(body: string): string[] {
   return names;
 }
 
-export function emitComponent(decl: Declaration): string {
+export function emitComponent(decl: Declaration, emitDefault = true): string {
   const tagClause = decl.clauses.find((c) => c.key === 'tag');
   const tag = tagClause?.value ?? decl.name.toLowerCase();
   const isExport = decl.clauses.some((c) => c.key === 'export');
@@ -52,7 +52,7 @@ export function emitComponent(decl: Declaration): string {
   const templateBody = codegen(ast);
 
   const bootLines: string[] = [
-    '  const { props, host, refs, ref, find, findAll, effect, emit, registry, task, onCleanup } = ctx;',
+    '  const { props, host, refs, ref, find, findAll, effect, emit, registry, task, onCleanup, readFrame } = ctx;',
   ];
   // script — private boot statements
   if (script?.body) bootLines.push(`  ${script.body.trim()}`);
@@ -78,13 +78,11 @@ export function emitComponent(decl: Declaration): string {
   // Default export: a route/handler factory that instantiates the element and
   // reflects the matched route params (typed) onto it before boot (REQ-18).
   // Importing the module also registers the custom element (defineComponent side effect).
-  return `${isExport ? 'export ' : ''}const ${decl.name} = defineComponent({
-  tag: ${sq(tag)},
-  props: ${JSON.stringify(propNames(decl))},
-  boot: (ctx) => {
-${bootLines.join('\n')}
-  }${styleField}
-});
+  // A module can hold at most one `export default`, so only the file's primary
+  // (first) component emits it; secondary components in the same file are still
+  // registered via the `defineComponent` side effect and reachable by tag/name.
+  const defaultExport = emitDefault
+    ? `
 export default (ctx) => {
   const __el = document.createElement(${sq(tag)});
   if (ctx && ctx.params) {
@@ -96,5 +94,14 @@ export default (ctx) => {
   }
   return __el;
 };
-`;
+`
+    : '';
+  return `${isExport ? 'export ' : ''}const ${decl.name} = defineComponent({
+  tag: ${sq(tag)},
+  props: ${JSON.stringify(propNames(decl))},
+  boot: (ctx) => {
+${bootLines.join('\n')}
+  }${styleField}
+});
+${defaultExport}`;
 }

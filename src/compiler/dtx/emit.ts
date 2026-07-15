@@ -268,7 +268,7 @@ function collectRouterRefs(decl: Declaration): Set<string> {
 }
 
 // `router` verb → default-exported RouteEntry[] (REQ-09 §9.2, REQ-11 §11.1).
-function emitRouterDecl(decl: Declaration): string {
+function emitRouterDecl(decl: Declaration, emitDefault = true): string {
   const routesMember = decl.members.find((m) => m.kind === 'routes');
   const entries: string[] = [];
   let group: RouteClauses = { guards: [] };
@@ -284,7 +284,11 @@ function emitRouterDecl(decl: Declaration): string {
     const entry = parseRouteLine(line, group);
     if (entry) entries.push(`  ${entry},`);
   }
-  return `export default [\n${entries.join('\n')}\n];\n`;
+  const arr = `[\n${entries.join('\n')}\n]`;
+  // At most one `export default` per module. If another decl already owns it,
+  // emit the routes as a named const instead of a second default (avoids
+  // "Identifier '.default' has already been declared").
+  return emitDefault ? `export default ${arr};\n` : `const ${decl.name} = ${arr};\n`;
 }
 
 function emitProvideDecl(decl: Declaration): string {
@@ -323,6 +327,34 @@ function addTemplateHelpers(needed: Set<string>): void {
   }
 }
 
+// Module-level reactivity primitives (NOT provided via ctx — those are effect/emit/
+// task/onCleanup/readFrame). Auto-imported when a body calls one but the author
+// didn't import it, so a `script` using `state(...)` doesn't throw
+// `ReferenceError: state is not defined` at boot (which renders the component empty
+// and reads as a template/reactivity bug). Skipped when the author already imports
+// the name, so no duplicate binding.
+const AUTO_IMPORT_PRIMITIVES = [
+  'state', 'derived', 'batch', 'shallow', 'untrack', 'untracked', 'defer', 'idle',
+];
+
+function collectBoundImportNames(ast: DtxAst): Set<string> {
+  const names = new Set<string>();
+  for (const imp of ast.imports) {
+    if (imp.namespace) names.add(imp.namespace);
+    for (const it of imp.items) names.add(kebabToCamel(it.alias ?? it.source));
+  }
+  return names;
+}
+
+function collectBodyText(ast: DtxAst): string {
+  const parts: string[] = [];
+  for (const decl of ast.declarations) {
+    for (const m of decl.members ?? []) if (m.body) parts.push(m.body);
+  }
+  for (const d of ast.declares ?? []) if (d.body) parts.push(d.body);
+  return parts.join('\n');
+}
+
 function collectImports(ast: DtxAst): Set<string> {
   const needed = new Set<string>();
   for (const decl of ast.declarations) {
@@ -337,6 +369,13 @@ function collectImports(ast: DtxAst): Set<string> {
   }
   for (const d of ast.declares ?? []) {
     if (d.kind === 'tpl' || d.kind === 'template') addTemplateHelpers(needed);
+  }
+  // Auto-import used-but-unimported reactivity primitives (dedup vs author imports).
+  const bound = collectBoundImportNames(ast);
+  const body = collectBodyText(ast);
+  for (const name of AUTO_IMPORT_PRIMITIVES) {
+    if (bound.has(name)) continue;
+    if (new RegExp(`\\b${name}\\s*\\(`).test(body)) needed.add(name);
   }
   return needed;
 }
@@ -380,13 +419,23 @@ export function emitDtx(ast: DtxAst, opts: SpecifierOptions = {}): { code: strin
   for (const imp of ast.imports) lines.push(emitImport(imp, opts, defaultRefs).trimEnd());
   lines.push('');
   for (const d of ast.declares ?? []) lines.push(emitDeclare(d));
+  // A module may hold at most one `export default`. Both `component` (route-handler
+  // factory) and `router` (RouteEntry[]) want it, so the first such decl in the file
+  // owns it; later ones fall back to a named export/registration.
+  let defaultEmitted = false;
   for (const decl of ast.declarations) {
     if (decl.verb === 'trait') lines.push(emitTraitDecl(decl));
     else if (decl.verb === 'filter') lines.push(emitFilterDecl(decl));
     else if (decl.verb === 'token') lines.push(emitTokenDecl(decl));
     else if (decl.verb === 'provide') lines.push(emitProvideDecl(decl));
-    else if (decl.verb === 'router') lines.push(emitRouterDecl(decl));
-    else if (decl.verb === 'component') lines.push(emitComponent(decl));
+    else if (decl.verb === 'router') {
+      lines.push(emitRouterDecl(decl, !defaultEmitted));
+      defaultEmitted = true;
+    }
+    else if (decl.verb === 'component') {
+      lines.push(emitComponent(decl, !defaultEmitted));
+      defaultEmitted = true;
+    }
   }
   return { code: lines.join('\n') };
 }

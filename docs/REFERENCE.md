@@ -251,9 +251,10 @@ Define either `boot` or `template`. `ctx` (the `TemplateCtx`):
 |---|---|
 | `props` | reactive proxy of attributes + `setup()` output |
 | `host` | the element instance |
-| `refs` / `ref(name)` | named element refs (see §8) |
+| `refs` / `ref(name)` | named element refs — **reactive**: a ref inside an `<if>`/`<for>` lands a tick later and re-runs effects that read it (see §8) |
 | `find(sel)` / `findAll(sel)` | `host.querySelector` / `querySelectorAll` |
 | `effect(fn)` | instance-scoped effect, **auto-disposed on unmount** |
+| `readFrame(fn)` → `Promise<T>` | run `fn` after the next DOM commit (post-layout reads) — also importable from `uidetox` |
 | `task(fn, opts?)` | instance-scoped task, auto-disposed (see §10) |
 | `onCleanup(fn)` | teardown run on disconnect (also importable from `uidetox`) |
 | `emit(name, detail?)` | dispatch a bubbling+composed `CustomEvent` from the host |
@@ -345,6 +346,19 @@ A section-based grammar. Top-level verbs: `component`, `trait`, `filter`, `token
 `export`/`disabled`, `tag <name>`, `extends [A, B]`, `appliesto [input]`,
 `input`/`output` (filters), `params (type name, type? name default)`.
 
+**Module output & the `export default`.** Each file compiles to one ESM module.
+A `component` emits a route-handler factory as the module's `export default`
+(importing the file registers the custom element via a side effect); a `router`
+emits its `RouteEntry[]` as the default. A module can have **at most one**
+`export default`, so **only the first** default-owning declaration (first
+`component`, or a `router`) gets it — later components still register (reachable by
+tag/name) and a secondary `router` becomes a named `const`. **Prefer one component
+per `.dtx` file.** Multiple components share a file fine, but only the first is the
+routable default; if you route to a component, keep it first or give it its own file.
+(Before this rule each component emitted its own default — a multi-component file
+then failed to load with `SyntaxError: Identifier '.default' has already been
+declared`, which reads as "the component never mounts".)
+
 Two member kinds:
 
 - **Section members** — `props`, `tpl`/`template`, `script`, `actions`,
@@ -388,8 +402,45 @@ end component
 
 Section semantics: `script` = private boot statements; `actions` = each
 `function foo(){}` becomes a `host.foo` public method; `effects` runs after the
-template is built (refs populated); `style scoped` detects `scoped` on the header;
+template is built; `style scoped` detects `scoped` on the header;
 `task` / `task idle` wraps the body as `task(async (signal) => { … })`.
+
+**Auto-imported primitives.** `defineComponent`, the template helpers, and the
+module-level reactivity primitives — `state`, `derived`, `batch`, `shallow`,
+`untrack`, `untracked`, `defer`, `idle` — are imported for you when a body calls
+them, so a `script` can write `const s = state({…})` with no `import` line. (An
+explicit `import state from "uidetox"` still works and is de-duplicated.) The
+ctx-provided helpers `effect`/`emit`/`task`/`onCleanup`/`readFrame` come from the
+boot destructure, not an import. If a component ever renders empty, open the browser
+console: a boot-time `ReferenceError` (e.g. an unrecognized identifier) aborts the
+render and leaves the element empty — it is not a template or `<if>` reactivity bug.
+
+**Refs are reactive.** A `#name` inside a control-flow block (`<if>`, `<for>`,
+`<case>`) is *not* populated synchronously — those blocks defer their first render
+to a microtask, so `refs.name` is `undefined` right after the template is built and
+lands a tick later. Because `refs` is a reactive proxy, an `effect` that reads
+`refs.name` **re-runs when the ref lands** — so you never read a stale `undefined`.
+
+`effect(…)` inside `effects` (or `script`) **creates a reactive subscription** —
+it re-runs whenever a signal, prop, or ref it read changes. Use it to react to a
+prop or ref that arrives *after* boot (e.g. measure + position against a
+`.prop`-bound `anchor` once the measured element exists):
+
+```
+effects
+effect(() => {
+  if (props.anchor && refs.pop) readFrame(() => place(props.anchor));
+});
+end effects
+```
+
+`readFrame` is provided in `script`/`effects` scope (destructured from `ctx`, like
+`effect`/`emit`/`task`) — no import needed. The effect re-runs when either
+`props.anchor` is set **or** `refs.pop` lands (the `#pop` element inside an `<if>`),
+and `readFrame(fn)` runs `fn` after the next DOM commit — no `requestAnimationFrame`
+retry loop needed. Pass **plain data** through `.prop` (numbers/objects); platform
+objects work too — a `DOMRect` passes through intact (its getters are preserved,
+not wrapped in a reactive proxy).
 
 `declare <kind> <name> … end <kind>` defines a reusable fragment (`tpl`, `style`,
 `props`, `script`, `actions`, `effects`).
@@ -516,9 +567,33 @@ static. Quotes around the expression are optional (`@click=${fn}` ≡
 |---|---|---|
 | `x=${e}` | expression | `setAttribute('x', e)` (removed when `false`/`null`/`undefined`) |
 | `@click=${fn}` | event | `addEventListener('click', fn)` |
-| `.prop=${e}` | property | assigns DOM property |
+| `.prop=${e}` | property | assigns DOM property → child's reactive `ctx.props` |
 | `?disabled=${e}` | boolean | toggles boolean attribute |
 | `class="x"` | static | literal |
+
+**Passing object/array props.** Attributes stringify (`x=${obj}` → `"[object
+Object]"`) — for structured data use the **property** binding `.prop=${obj}`. A
+declared prop (`props: [...]` / a `props` section) gets a generated accessor that
+writes the value into the child's reactive `_props`, so the child reads it as
+`ctx.props.<prop>` and re-renders when the parent updates it:
+
+```html
+<!-- parent -->
+<lad-single .item=${s.item} .palette=${s.palette}></lad-single>
+```
+```
+component LadSingle tag lad-single
+props
+object item
+object palette
+end props
+template
+<span>${props.item.word}</span>     <!-- reactive: updates when s.item changes -->
+end template
+end component
+```
+
+Object identity, `DOMRect`, and functions all survive (no JSON round-trip).
 
 **Element refs** → `ctx.refs` / `ctx.ref(name)` (also `ctx.find` / `ctx.findAll`).
 Keys are camel-cased. Resolution:

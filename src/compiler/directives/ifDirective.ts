@@ -12,6 +12,8 @@ function splitThenElse(children: TplNode[]): { thenNodes: TplNode[]; elseNodes: 
     (c) => c.type === 'element' && c.tag === 'else',
   );
   if (elseIdx === -1) return { thenNodes: children, elseNodes: null };
+  // `<else>` is a container (implicitly closed at `</if>` — see rewriteControlFlow):
+  // then-branch is the nodes before it, else-branch is its children.
   const elseEl = children[elseIdx] as TplElement;
   return {
     thenNodes: children.slice(0, elseIdx),
