@@ -2,7 +2,7 @@
   "name": "uidetox",
   "version": "0.1.1",
   "type": "module",
-  "description": "HTML-first Web Components framework with Markdown SFCs",
+  "description": "HTML-first Web Components framework with Markdown SFCs. Not a React, nor Vue or Angular.",
   "license": "Apache-2.0",
   "author": "roman4e <roman4e@gmail.com>",
   "homepage": "https://github.com/roman4e/uidetox#readme",
@@ -73,7 +73,6 @@
   },
   "dependencies": {
     "commander": "^12.0.0",
-    "magic-string": "^0.30.10",
     "parse5": "^7.1.2",
     "smol-toml": "^1.3.0",
     "yaml": "^2.4.0"
