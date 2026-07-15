@@ -1424,9 +1424,9 @@ import { transformDirectives } from './template/transform.js';
 import { codegen } from './template/codegen.js';
 
 const RUNTIME_IMPORTS =
-  'import { defineComponent, defineEmits, registry, createToken, __el, __text, __bind, __if, __for, __case, __fragment, CASE_DEFAULT } from "uidetox";';
+  'import { defineComponent, defineEmits, registry, createToken, __el, __text, __bind, __if, __for, __case, __fragment, CASE_DEFAULT } from "ui-detox";';
 const TESTING_IMPORTS =
-  'import { it, describe, beforeEach, expect, capture, snapshot, pixel, axe, flushSync, getCollectedTree, runTree } from "uidetox/testing";';
+  'import { it, describe, beforeEach, expect, capture, snapshot, pixel, axe, flushSync, getCollectedTree, runTree } from "ui-detox/testing";';
 
 const HAPPY_DOM_ROLES = new Set(['test', 'test:interaction', 'test:visual', 'test:a11y']);
 const BROWSER_ROLES = new Set(['test:visual:pixel', 'test:a11y:browser']);
@@ -1683,7 +1683,7 @@ git commit -m "feat(cli): discover + emit test modules to a cache dir"
 **Interfaces:**
 - Produces:
   - `runInHappyDom(cachePath: string, componentSnapshotDir: string, updateMode: boolean): Promise<RunResult>` — spins up a fresh `Window` from happy-dom, seeds `document`/`window` globals, calls `configureSnapshots` for structural snapshots (pixel is not configured in this env), dynamic-imports the module, awaits its default export.
-- Rewrites `import { … } from 'uidetox'` and `'uidetox/testing'` in the module string to the local runtime paths (so the module runs without needing the package published).
+- Rewrites `import { … } from 'ui-detox'` and `'ui-detox/testing'` in the module string to the local runtime paths (so the module runs without needing the package published).
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2187,7 +2187,7 @@ export async function runTest(options: TestOptions): Promise<{ passed: number; f
 
 const program = new Command();
 program
-  .name('uidetox')
+  .name('ui-detox')
   .command('test <inputDir>')
   .option('-o, --out <dir>', 'Cache directory for compiled test modules')
   .option('-s, --snapshots <dir>', 'Directory to read/write baselines')

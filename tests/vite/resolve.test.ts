@@ -10,7 +10,7 @@ describe('isDottedSpecifier', () => {
     expect(isDottedSpecifier('pages.Login')).toBe(true);
     expect(isDottedSpecifier('lib.auth-guard')).toBe(true);
     expect(isDottedSpecifier('components.NumericInput')).toBe(true);
-    expect(isDottedSpecifier('uidetox/forms')).toBe(false); // slash
+    expect(isDottedSpecifier('ui-detox/forms')).toBe(false); // slash
     expect(isDottedSpecifier('./x.dtx')).toBe(false);        // relative
     expect(isDottedSpecifier('lodash')).toBe(false);         // single segment
   });

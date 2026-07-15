@@ -1042,7 +1042,7 @@ import type {
   ParamSpec,
 } from './types.js';
 
-const RUNTIME_MODULE = 'uidetox';
+const RUNTIME_MODULE = 'ui-detox';
 
 function sq(v: unknown): string {
   if (typeof v !== 'string') return JSON.stringify(v);

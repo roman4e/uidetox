@@ -272,7 +272,7 @@ registry.provide(themeToken, () => {
 
 ## 9. Runtime API
 
-New public exports from `uidetox`:
+New public exports from `ui-detox`:
 
 - `defineTrait(name, spec)` — returns a `TraitDescriptor` plus registers with the global trait registry.
 - `defineFilter(name, spec)` — returns a callable filter function plus registers.

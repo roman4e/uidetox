@@ -7,7 +7,7 @@ same and canvas drops get real coordinates.
 Register once at startup:
 
 ```ts
-import { registerDnd } from 'uidetox';
+import { registerDnd } from 'ui-detox';
 registerDnd();
 ```
 

@@ -21,7 +21,7 @@ function evalModule(code: string): void {
 // relayed through a middle component (stopPropagation + re-emit), not a same-scope
 // button. This is the exact pattern the port reported as "never mounts".
 const SRC = `
-import state from "uidetox"
+import state from "ui-detox"
 
 component TokenX export tag token-x
 template

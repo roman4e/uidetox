@@ -9,7 +9,7 @@ tracks. Correct default. `shallow(obj)` tracks **only top-level keys** and
 returns nested values untouched.
 
 ```ts
-import { shallow, state } from 'uidetox';
+import { shallow, state } from 'ui-detox';
 
 const g = shallow({ nodes: [], edges: [], aggregate: null });
 
@@ -30,7 +30,7 @@ their identity (`g.nodes === theArrayYouSet`). Delete notifies.
 Groups mutations so subscribers are notified once, after all writes finish.
 
 ```ts
-import { batch } from 'uidetox';
+import { batch } from 'ui-detox';
 
 batch(() => {
   g.nodes = newNodes;
@@ -51,7 +51,7 @@ Read reactive state without subscribing the current effect — for logging/debug
 reads that shouldn't create dependencies.
 
 ```ts
-import { untracked } from 'uidetox';
+import { untracked } from 'ui-detox';
 
 effect(() => {
   const size = g.nodes.length;                       // tracked

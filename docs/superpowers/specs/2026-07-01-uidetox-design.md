@@ -299,7 +299,7 @@ export const apiToken   = registryKey<ApiClient>('api');
 ### 7.3 Provide (bootstrap)
 
 ```ts
-import { registry } from 'uidetox';
+import { registry } from 'ui-detox';
 
 registry.provide(themeToken, () => currentTheme);
 registry.provide(userToken,  () => authService.user);

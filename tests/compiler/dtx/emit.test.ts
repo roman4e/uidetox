@@ -10,7 +10,7 @@ on blur trim_handler() {
 }
 `;
     const { code } = compileDtx(src);
-    expect(code).toContain('import { defineTrait } from "uidetox";');
+    expect(code).toContain('import { defineTrait } from "ui-detox";');
     expect(code).toContain('export const trim = defineTrait("trim", {');
     expect(code).toContain('appliesTo: ["input", "textarea"]');
     expect(code).toContain('paramsSchema: { savedKey');
@@ -23,7 +23,7 @@ on blur trim_handler() {
 transform lc() { return v.toLowerCase(); }
 `;
     const { code } = compileDtx(src);
-    expect(code).toContain('import { defineFilter } from "uidetox";');
+    expect(code).toContain('import { defineFilter } from "ui-detox";');
     expect(code).toContain('export const lowercase = defineFilter("lowercase", {');
     expect(code).toContain('return v.toLowerCase()');
   });

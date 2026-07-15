@@ -47,16 +47,16 @@ describe('REQ-14 — user imports resolve (bare npm verbatim, local .ts relative
     writeFileSync(join(root, 'src', 'tokens.ts'), 'export const authToken = 1;');
     const login = join(root, 'src', 'pages', 'Login.dtx');
     writeFileSync(login,
-      'import registry from "uidetox"\n' +
-      'import form, f from "uidetox/forms"\n' +
+      'import registry from "ui-detox"\n' +
+      'import form, f from "ui-detox/forms"\n' +
       'import authToken from "tokens"\n' +
       'component LoginPage tag login-page\ntemplate\n<div/>\nend template\nend component\n');
 
     const p = uidetox({ root });
     const src = (p.load as (id: string) => string | null)(login)!;
     const out = (p.transform as (c: string, id: string) => { code: string } | null)(src, login);
-    expect(out?.code).toContain('import { registry } from "uidetox";');        // bare npm, NOT ./uidetox.js
-    expect(out?.code).toContain('import { form, f } from "uidetox/forms";');    // scoped subpath verbatim
+    expect(out?.code).toContain('import { registry } from "ui-detox";');        // bare npm, NOT ./uidetox.js
+    expect(out?.code).toContain('import { form, f } from "ui-detox/forms";');    // scoped subpath verbatim
     expect(out?.code).toContain('import { authToken } from "../tokens.ts";');      // local .ts, project-relative
     expect(out?.code).not.toContain('./uidetox.js');
   });
@@ -73,7 +73,7 @@ describe('Bug 10.2 — esbuild resolves bare + dotted specifiers during scan', (
     });
     expect(resolveCb!({ path: 'pages.Login' })!.path).toBe(join(root, 'src', 'pages', 'Login.dtx'));
     expect(resolveCb!({ path: 'routes' })!.path).toBe(join(root, 'src', 'routes.dtx'));
-    expect(resolveCb!({ path: 'uidetox' })).toBeNull();       // npm passthrough
-    expect(resolveCb!({ path: 'uidetox' })).toBeNull();
+    expect(resolveCb!({ path: 'ui-detox' })).toBeNull();       // npm passthrough
+    expect(resolveCb!({ path: 'ui-detox' })).toBeNull();
   });
 });

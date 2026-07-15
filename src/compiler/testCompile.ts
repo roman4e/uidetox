@@ -4,9 +4,9 @@ import { transformDirectives } from './template/transform.js';
 import { codegen } from './template/codegen.js';
 
 const RUNTIME_IMPORTS =
-  'import { defineComponent, defineEmits, registry, createToken, __el, __text, __bind, __if, __for, __case, __fragment, CASE_DEFAULT } from "uidetox";';
+  'import { defineComponent, defineEmits, registry, createToken, __el, __text, __bind, __if, __for, __case, __fragment, CASE_DEFAULT } from "ui-detox";';
 const TESTING_IMPORTS =
-  'import { it, describe, beforeEach, expect, capture, snapshot, pixel, axe, flushSync, getCollectedTree, runTree } from "uidetox/testing";';
+  'import { it, describe, beforeEach, expect, capture, snapshot, pixel, axe, flushSync, getCollectedTree, runTree } from "ui-detox/testing";';
 
 const HAPPY_DOM_ROLES = new Set(['test', 'test:interaction', 'test:visual', 'test:a11y']);
 const BROWSER_ROLES = new Set(['test:visual:pixel', 'test:a11y:browser']);

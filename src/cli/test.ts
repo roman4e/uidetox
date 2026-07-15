@@ -43,7 +43,7 @@ export async function runTest(options: TestOptions): Promise<{ passed: number; f
 
 const program = new Command();
 program
-  .name('uidetox')
+  .name('ui-detox')
   .command('test <inputDir>')
   .option('-o, --out <dir>', 'Cache directory for compiled test modules')
   .option('-s, --snapshots <dir>', 'Directory to read/write baselines')

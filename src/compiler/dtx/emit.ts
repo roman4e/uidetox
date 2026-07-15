@@ -15,7 +15,7 @@ import type {
 
 import { resolveSpecifier, type SpecifierOptions } from './resolve.js';
 
-const RUNTIME_MODULE = 'uidetox';
+const RUNTIME_MODULE = 'ui-detox';
 
 // All emitted string literals use double quotes (JSON.stringify handles escaping,
 // including newlines in multi-line style/script bodies).

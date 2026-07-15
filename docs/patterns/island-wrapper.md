@@ -38,7 +38,7 @@ ctx.registry             // hierarchical registry (apiToken, themeToken, …)
 
 ```ts
 import cytoscape from 'cytoscape';
-import { defineComponent } from 'uidetox';
+import { defineComponent } from 'ui-detox';
 
 defineComponent({
   tag: 'graph-editor',

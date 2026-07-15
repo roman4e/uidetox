@@ -110,7 +110,7 @@ describe('generateApiClient', () => {
   });
 
   it('imports the http client', () => {
-    expect(code).toContain("import { createHttpClient, type HttpClientOptions } from 'uidetox/http';");
+    expect(code).toContain("import { createHttpClient, type HttpClientOptions } from 'ui-detox/http';");
   });
 
   it('groups typed methods by tag', () => {

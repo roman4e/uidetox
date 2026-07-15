@@ -52,7 +52,7 @@ export async function runBuild(options: BuildOptions): Promise<void> {
 
 export const program = new Command();
 program
-  .name('uidetox')
+  .name('ui-detox')
   .command('build <inputDir>')
   .option('-o, --outDir <dir>', 'Output directory', 'dist')
   .action(async (inputDir: string, opts: { outDir: string }) => {

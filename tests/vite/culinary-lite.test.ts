@@ -16,7 +16,7 @@ describe('culinary-lite example project', () => {
   it('resolves a single-segment ref (routes) and lets npm bare specifiers pass', () => {
     expect(core.resolveSpecifier('routes')).toBe(join(projectRoot, 'src', 'routes.dtx'));
     expect(core.resolveSpecifier('lodash')).toBeNull();    // not under includes → npm
-    expect(core.resolveSpecifier('uidetox')).toBeNull();
+    expect(core.resolveSpecifier('ui-detox')).toBeNull();
   });
 
   it('compiles both page components with unique tags', () => {

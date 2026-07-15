@@ -25,7 +25,7 @@ function evalComponent(code: string, extras: Record<string, unknown>): void {
 // registered — read as "nested <if> never mounts". The nested reactivity itself is
 // fine; the module just never loaded.
 const TWO_COMPONENTS = `
-import state from "uidetox"
+import state from "ui-detox"
 
 component Req06Repro export tag req06-repro
 script

@@ -94,7 +94,7 @@ pnpm init
 Write `package.json`:
 ```json
 {
-  "name": "uidetox",
+  "name": "ui-detox",
   "version": "0.0.1",
   "type": "module",
   "description": "HTML-first Web Components framework with Markdown SFCs",
@@ -106,7 +106,7 @@ Write `package.json`:
     "cli": "tsx src/cli/build.ts"
   },
   "bin": {
-    "uidetox": "./dist/cli/build.js"
+    "ui-detox": "./dist/cli/build.js"
   },
   "exports": {
     ".": "./dist/runtime/index.js",
@@ -2466,7 +2466,7 @@ git commit -m "feat: <case>/<when>/<else> directive"
 - Produces:
   - `compile(source: string): { js: string; tag: string }`
   - Emits an ES module that:
-    1. Imports the runtime helpers from `'uidetox'`.
+    1. Imports the runtime helpers from `'ui-detox'`.
     2. Contains the `ts script` block source (assumed to define `props`, handlers, or `state`) inside a `setup(ctx)` closure that returns whatever it declared as exports; if the script has `export const props = {...}`, it is destructured; otherwise the entire top-level `let`/`const` set is returned to the template ctx.
     3. Contains the compiled template as `template(ctx)`.
     4. Calls `defineComponent({ tag, template, setup, style, props: [...] })`.
@@ -2502,7 +2502,7 @@ describe('compile()', () => {
   it('produces an ES module that calls defineComponent for the tag', () => {
     const { js, tag } = compile(SFC);
     expect(tag).toBe('x-greeter');
-    expect(js).toContain('import { defineComponent, __el, __text, __bind, __if, __for, __case, __fragment, CASE_DEFAULT } from "uidetox";');
+    expect(js).toContain('import { defineComponent, __el, __text, __bind, __if, __for, __case, __fragment, CASE_DEFAULT } from "ui-detox";');
     expect(js).toContain('defineComponent({');
     expect(js).toContain('tag: "x-greeter"');
     expect(js).toContain('__el("span"');
@@ -2526,7 +2526,7 @@ import { transformDirectives } from './template/transform.js';
 import { codegen } from './template/codegen.js';
 
 const RUNTIME_IMPORTS =
-  'import { defineComponent, __el, __text, __bind, __if, __for, __case, __fragment, CASE_DEFAULT } from "uidetox";';
+  'import { defineComponent, __el, __text, __bind, __if, __for, __case, __fragment, CASE_DEFAULT } from "ui-detox";';
 
 const PROP_LINE = /^\s*(\w+)\s*[?:]/;
 
@@ -2708,7 +2708,7 @@ export async function runBuild(options: BuildOptions): Promise<void> {
 
 const program = new Command();
 program
-  .name('uidetox')
+  .name('ui-detox')
   .command('build <inputDir>')
   .option('-o, --outDir <dir>', 'Output directory', 'dist')
   .action(async (inputDir: string, opts: { outDir: string }) => {
@@ -2803,9 +2803,9 @@ describe('hello world SFC', () => {
   it('compiles and boots in a happy-dom environment', async () => {
     const src = readFileSync(join(process.cwd(), 'examples/hello/App.md'), 'utf8');
     const { js } = compile(src);
-    // Evaluate the module with local runtime import instead of the "uidetox" specifier
+    // Evaluate the module with local runtime import instead of the "ui-detox" specifier
     const runtimeSpecifier = new URL('../../src/runtime/index.ts', import.meta.url).pathname;
-    const rewritten = js.replace('"uidetox"', JSON.stringify(runtimeSpecifier));
+    const rewritten = js.replace('"ui-detox"', JSON.stringify(runtimeSpecifier));
     const dataUrl = 'data:text/javascript;base64,' + Buffer.from(rewritten).toString('base64');
     await import(/* @vite-ignore */ dataUrl);
 

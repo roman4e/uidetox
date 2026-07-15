@@ -109,7 +109,7 @@ export function uidetox(opts: UidetoxPluginOptions = {}): Record<string, unknown
   const core = createUidetoxCore(opts);
   const hmr = opts.hmr !== false;
   return {
-    name: 'uidetox',
+    name: 'ui-detox',
     enforce: 'pre',
     buildStart() {
       // Emit ambient TS shims so `tsc --noEmit` resolves dotted imports.
@@ -156,7 +156,7 @@ export function uidetoxEsbuild(opts: UidetoxPluginOptions = {}): { name: string;
   // re-emit colocated test blocks so the runner can execute them.
   const core = createUidetoxCore({ extractCss: false, mode: 'test', ...opts });
   return {
-    name: 'uidetox',
+    name: 'ui-detox',
     setup(build) {
       // Any bare specifier (dotted `pages.Login` or single `routes`); a miss
       // returns null so esbuild falls through to node_modules for npm packages.

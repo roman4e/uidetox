@@ -1,6 +1,6 @@
 # culinary-lite
 
-Smoke-test Vite project for the `uidetox/vite` plugin: a router with a `.dtx`
+Smoke-test Vite project for the `ui-detox/vite` plugin: a router with a `.dtx`
 login and dashboard, dotted-module imports resolved through `detox.toml`.
 
 ```

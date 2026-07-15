@@ -18,7 +18,7 @@ describe('router-verb shim (REQ-25)', () => {
   it('types the default export as RouteEntry[] and imports RouteEntry', () => {
     expect(isRouterSource(ROUTES)).toBe(true);
     const shim = generateTsShim('/proj/routes.dtx', ROUTES);
-    expect(shim).toContain('import type { RouteEntry } from "uidetox";');
+    expect(shim).toContain('import type { RouteEntry } from "ui-detox";');
     expect(shim).toContain('_default: RouteEntry[]');
     expect(shim).not.toContain('(props?: Props) => HTMLElement');
   });

@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import uidetox from 'uidetox/vite';
+import uidetox from 'ui-detox/vite';
 
 export default defineConfig({
   plugins: [uidetox()],

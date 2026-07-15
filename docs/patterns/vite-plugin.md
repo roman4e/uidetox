@@ -1,4 +1,4 @@
-# Pattern: Vite plugin (`uidetox/vite`)
+# Pattern: Vite plugin (`ui-detox/vite`)
 
 Load `.dtx` and `.md` components directly, resolve dotted-module imports via
 `detox.toml`, and get HMR — no pre-build step.
@@ -6,7 +6,7 @@ Load `.dtx` and `.md` components directly, resolve dotted-module imports via
 ```ts
 // vite.config.ts
 import { defineConfig } from 'vite';
-import uidetox from 'uidetox/vite';
+import uidetox from 'ui-detox/vite';
 
 export default defineConfig({
   plugins: [uidetox()],   // all options optional
@@ -19,7 +19,7 @@ Options: `root`, `config` (path to `detox.toml`, default `<root>/detox.toml`),
 ## What it does
 
 - **Loads components.** `transform` compiles any `.dtx` / `.md` source to ESM
-  through `uidetox/compiler`. A default `import` of the file registers its Custom
+  through `ui-detox/compiler`. A default `import` of the file registers its Custom
   Element.
 - **Dotted-module resolution.** An import matching `segment(.segment)+` (no
   slashes, no relative prefix) — `pages.Login`, `lib.auth-guard` — resolves via
@@ -64,7 +64,7 @@ CSS-HMR on it and bundles it into `dist/assets/*.css` for production.
 Vitest/Storybook/custom bundlers; the Vite plugin uses the same core.
 
 ```ts
-import { uidetoxEsbuild } from 'uidetox/vite';
+import { uidetoxEsbuild } from 'ui-detox/vite';
 esbuild.build({ plugins: [uidetoxEsbuild()] });
 ```
 
@@ -79,7 +79,7 @@ execute them. The esbuild plugin defaults to `mode: 'test'`.
 ```ts
 // vitest.config.ts
 import { defineConfig } from 'vitest/config';
-import { uidetoxEsbuild } from 'uidetox/vite';
+import { uidetoxEsbuild } from 'ui-detox/vite';
 
 export default defineConfig({
   test: { environment: 'happy-dom' },

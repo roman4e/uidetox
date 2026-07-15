@@ -122,8 +122,8 @@ The runner batches blocks by environment: it starts one happy-dom pass for all f
 For `todo.md` the test compiler emits `todo.test.js`:
 
 ```js
-import { defineComponent, __el, /* ... */, registry } from 'uidetox';
-import { it, describe, expect, snapshot, pixel, axe, flushSync, capture, fixtures as $fixtures } from 'uidetox/testing';
+import { defineComponent, __el, /* ... */, registry } from 'ui-detox';
+import { it, describe, expect, snapshot, pixel, axe, flushSync, capture, fixtures as $fixtures } from 'ui-detox/testing';
 // component boot (identical to prod)
 function boot(ctx) { /* script + template inlined */ }
 defineComponent({ tag: 'app-todo', props: [...], boot });

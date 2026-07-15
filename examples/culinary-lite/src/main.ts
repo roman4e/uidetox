@@ -1,4 +1,4 @@
-import { defineRouter, registerOutlet } from 'uidetox';
+import { defineRouter, registerOutlet } from 'ui-detox';
 // Dotted-module refs are resolved by the uidetox Vite plugin via detox.toml.
 // `routes` compiles from routes.dtx (the `router` verb) to a RouteEntry[] default export.
 import routes from 'routes';

@@ -1,13 +1,13 @@
 # Pattern: Forms (schema-driven, reactive)
 
-`uidetox/forms` gives every screen a reactive value store, per-field
+`ui-detox/forms` gives every screen a reactive value store, per-field
 validation from a declarative schema, aggregated form state, two-way
 template binding, and async validators — with **no runtime dependency**.
 
 Import from the sub-path:
 
 ```ts
-import { f, form, registerFormComponents } from 'uidetox/forms';
+import { f, form, registerFormComponents } from 'ui-detox/forms';
 ```
 
 ## Schema DSL
