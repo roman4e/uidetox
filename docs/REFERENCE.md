@@ -251,9 +251,10 @@ Define either `boot` or `template`. `ctx` (the `TemplateCtx`):
 |---|---|
 | `props` | reactive proxy of attributes + `setup()` output |
 | `host` | the element instance |
-| `refs` / `ref(name)` | named element refs (see §8) |
+| `refs` / `ref(name)` | named element refs — **reactive**: a ref inside an `<if>`/`<for>` lands a tick later and re-runs effects that read it (see §8) |
 | `find(sel)` / `findAll(sel)` | `host.querySelector` / `querySelectorAll` |
 | `effect(fn)` | instance-scoped effect, **auto-disposed on unmount** |
+| `readFrame(fn)` → `Promise<T>` | run `fn` after the next DOM commit (post-layout reads) — also importable from `uidetox` |
 | `task(fn, opts?)` | instance-scoped task, auto-disposed (see §10) |
 | `onCleanup(fn)` | teardown run on disconnect (also importable from `uidetox`) |
 | `emit(name, detail?)` | dispatch a bubbling+composed `CustomEvent` from the host |
@@ -388,13 +389,19 @@ end component
 
 Section semantics: `script` = private boot statements; `actions` = each
 `function foo(){}` becomes a `host.foo` public method; `effects` runs after the
-template is built (refs populated); `style scoped` detects `scoped` on the header;
+template is built; `style scoped` detects `scoped` on the header;
 `task` / `task idle` wraps the body as `task(async (signal) => { … })`.
 
+**Refs are reactive.** A `#name` inside a control-flow block (`<if>`, `<for>`,
+`<case>`) is *not* populated synchronously — those blocks defer their first render
+to a microtask, so `refs.name` is `undefined` right after the template is built and
+lands a tick later. Because `refs` is a reactive proxy, an `effect` that reads
+`refs.name` **re-runs when the ref lands** — so you never read a stale `undefined`.
+
 `effect(…)` inside `effects` (or `script`) **creates a reactive subscription** —
-it re-runs whenever a signal or prop it read changes. Use it to react to a prop
-that arrives *after* boot (e.g. measure + position against a `.prop`-bound
-`anchor` set by the parent later):
+it re-runs whenever a signal, prop, or ref it read changes. Use it to react to a
+prop or ref that arrives *after* boot (e.g. measure + position against a
+`.prop`-bound `anchor` once the measured element exists):
 
 ```
 effects
@@ -404,11 +411,13 @@ effect(() => {
 end effects
 ```
 
-The effect re-runs when `props.anchor` is set, and `readFrame(fn)` runs `fn`
-after the next DOM commit — no `requestAnimationFrame` retry loop needed. Pass
-**plain data** through `.prop` (numbers/objects), not platform objects whose
-getters rely on internal slots — a `DOMRect` passes through fine now, but a plain
-`{ left, top, width, height }` is the safest contract.
+`readFrame` is provided in `script`/`effects` scope (destructured from `ctx`, like
+`effect`/`emit`/`task`) — no import needed. The effect re-runs when either
+`props.anchor` is set **or** `refs.pop` lands (the `#pop` element inside an `<if>`),
+and `readFrame(fn)` runs `fn` after the next DOM commit — no `requestAnimationFrame`
+retry loop needed. Pass **plain data** through `.prop` (numbers/objects); platform
+objects work too — a `DOMRect` passes through intact (its getters are preserved,
+not wrapped in a reactive proxy).
 
 `declare <kind> <name> … end <kind>` defines a reusable fragment (`tpl`, `style`,
 `props`, `script`, `actions`, `effects`).
