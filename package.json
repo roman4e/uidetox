@@ -1,26 +1,67 @@
 {
   "name": "uidetox",
-  "version": "0.0.1",
+  "version": "0.1.1",
   "type": "module",
   "description": "HTML-first Web Components framework with Markdown SFCs",
+  "license": "Apache-2.0",
+  "author": "roman4e <roman4e@gmail.com>",
+  "keywords": [
+    "web-components",
+    "custom-elements",
+    "signals",
+    "reactivity",
+    "framework",
+    "markdown",
+    "sfc",
+    "vite-plugin"
+  ],
   "packageManager": "pnpm@10.33.0",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "cli": "tsx src/cli/build.ts"
+    "cli": "tsx src/cli/build.ts",
+    "prepublishOnly": "pnpm build && pnpm test"
   },
   "bin": {
     "uidetox": "./dist/cli/build.js"
   },
+  "types": "./dist/runtime/index.d.ts",
   "exports": {
-    ".": "./dist/runtime/index.js",
-    "./forms": "./dist/forms/index.js",
-    "./http": "./dist/http/index.js",
-    "./i18n": "./dist/i18n/index.js",
-    "./ui": "./dist/ui/index.js",
-    "./vite": "./dist/vite/index.js",
-    "./compiler": "./dist/compiler/index.js"
+    ".": {
+      "types": "./dist/runtime/index.d.ts",
+      "default": "./dist/runtime/index.js"
+    },
+    "./forms": {
+      "types": "./dist/forms/index.d.ts",
+      "default": "./dist/forms/index.js"
+    },
+    "./http": {
+      "types": "./dist/http/index.d.ts",
+      "default": "./dist/http/index.js"
+    },
+    "./i18n": {
+      "types": "./dist/i18n/index.d.ts",
+      "default": "./dist/i18n/index.js"
+    },
+    "./ui": {
+      "types": "./dist/ui/index.d.ts",
+      "default": "./dist/ui/index.js"
+    },
+    "./vite": {
+      "types": "./dist/vite/index.d.ts",
+      "default": "./dist/vite/index.js"
+    },
+    "./compiler": {
+      "types": "./dist/compiler/index.d.ts",
+      "default": "./dist/compiler/index.js"
+    }
   },
   "dependencies": {
     "axe-core": "^4.9.0",
