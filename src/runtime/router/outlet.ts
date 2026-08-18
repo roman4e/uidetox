@@ -1,5 +1,6 @@
 import type { Handler, LazyHandler } from './types.js';
 import type { MatchedRoute, RouterInstance } from './define.js';
+import { enter, exit } from '../anim/enter.js';
 
 let registered = false;
 
@@ -43,6 +44,18 @@ export function registerOutlet(): void {
         const layoutNode = await layoutFn(ctx);
         layoutNode.appendChild(pageNode);
         node = layoutNode;
+      }
+
+      // Opt-in exit-before-enter route transition (`<router-outlet transition>`):
+      // the outgoing view plays its exit before the incoming view mounts and
+      // enters. Absent the attribute, swap synchronously as before.
+      if (this.hasAttribute('transition')) {
+        const outgoing = this.firstElementChild;
+        if (outgoing) await exit(outgoing);
+        while (this.firstChild) this.removeChild(this.firstChild);
+        this.appendChild(node);
+        if (node instanceof Element) enter(node);
+        return;
       }
 
       while (this.firstChild) this.removeChild(this.firstChild);
