@@ -3,10 +3,12 @@ import { registerI18nFilters } from '../../src/i18n/filters.js';
 import { getFilter } from '../../src/runtime/filters/define.js';
 import { setLocale } from '../../src/i18n/locale.js';
 import { registerUnit, clearUnits } from '../../src/i18n/units.js';
+import { registerMessages, clearMessages } from '../../src/i18n/catalog.js';
 
 beforeEach(() => {
   setLocale('uk-UA');
   clearUnits();
+  clearMessages();
   registerUnit('g', { symbol: 'г', base: 1, dimension: 'mass' });
   registerUnit('mg', { symbol: 'мг', base: 1e-3, dimension: 'mass' });
 });
@@ -16,9 +18,16 @@ const norm = (s: string): string => s.replace(/\s+/g, ' ');
 describe('registerI18nFilters', () => {
   it('registers all formatting filters', () => {
     registerI18nFilters();
-    for (const name of ['number', 'percent', 'delta', 'qty', 'date', 'dateTime', 'relative']) {
+    for (const name of ['number', 'percent', 'delta', 'qty', 'date', 'dateTime', 'relative', 't']) {
       expect(getFilter(name), name).toBeDefined();
     }
+  });
+
+  it('t filter looks up a key and interpolates params', () => {
+    registerMessages('uk', { greeting: 'Привіт, {{name}}' });
+    const tf = registerI18nFiltersAndGet('t');
+    expect(tf('greeting', { name: 'Роман' })).toBe('Привіт, Роман');
+    expect(tf('missing.key')).toBe('missing.key');
   });
 
   it('percent filter transforms a value', () => {

@@ -1,5 +1,6 @@
 import { defineFilter } from '../runtime/filters/define.js';
 import { fmt } from './format.js';
+import { t } from './catalog.js';
 
 interface FilterCtx {
   params: Record<string, unknown>;
@@ -45,4 +46,18 @@ export function registerI18nFilters(): void {
   dateLike('date', (v) => fmt.date(v));
   dateLike('dateTime', (v) => fmt.dateTime(v));
   dateLike('relative', (v) => fmt.relative(v));
+
+  // `${'home.heroTitle' | t}` — the piped value is the message key; keyword args
+  // become interpolation params: `${'greeting' | t:{name:'Роман'}}`.
+  defineFilter('t', {
+    input: 'string',
+    output: 'string',
+    paramsSchema: {},
+    transformers: [{
+      name: 't',
+      run(this: FilterCtx, key: unknown): unknown {
+        return t(String(key), this.params);
+      },
+    }],
+  });
 }

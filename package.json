@@ -1,6 +1,6 @@
 {
   "name": "ui-detox",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "description": "HTML-first Web Components framework with Markdown SFCs. Not a React, nor Vue or Angular.",
   "license": "Apache-2.0",

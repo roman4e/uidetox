@@ -38,4 +38,28 @@ describe('<router-outlet>', () => {
     expect(outlet.textContent).toBe('user');
     router.stop();
   });
+
+  it('exit-before-enter swaps content with the transition attribute', async () => {
+    const orig = globalThis.matchMedia;
+    (globalThis as { matchMedia: unknown }).matchMedia = () => ({ matches: true }); // reduced motion → sync
+    try {
+      registerOutlet();
+      history.replaceState(null, '', '/');
+      const router = defineRouter({ routes });
+      document.body.innerHTML = '<router-outlet transition></router-outlet>';
+      const outlet = document.body.querySelector('router-outlet')!;
+      (outlet as HTMLElement & { __attach: (r: ReturnType<typeof defineRouter>) => void }).__attach(router);
+
+      router.start();
+      await new Promise((r) => setTimeout(r, 0));
+      expect(outlet.textContent).toBe('home');
+
+      router.controller.goto('/users/9');
+      await new Promise((r) => setTimeout(r, 0));
+      expect(outlet.textContent).toBe('user');
+      router.stop();
+    } finally {
+      (globalThis as { matchMedia: unknown }).matchMedia = orig;
+    }
+  });
 });
